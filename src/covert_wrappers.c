@@ -390,7 +390,9 @@ char covert_recv(char *sip, unsigned short sport, int ipid, int seq, int ack, in
     if(recv_tcp.ip.id == 4) {
         return -1;
     } else {
-        return recv_tcp.ip.id;
+        if(recv_tcp.tcp.source == sport) {
+            return recv_tcp.ip.id;
+        }
     }
 
     if(sport == 0) {    //from any port
