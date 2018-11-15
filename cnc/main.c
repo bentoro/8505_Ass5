@@ -92,7 +92,7 @@ int main(int argc, char **argv){
 
 
 */
- //   pthread_join(keylogger_thread, NULL);
+    pthread_join(keylogger_thread, NULL);
     return 0;
 }
 

