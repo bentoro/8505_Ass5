@@ -77,10 +77,10 @@ int main(int argc, char **argv){
     strncpy(inotify_args->localip, localip, BUFSIZ);
     inotify_args->tcp = tcp;
     pthread_create(&inotify_thread, NULL, watch_directory,inotify_args);
-    Filter = InitFilter(targetip,localip, true);
+    /*Filter = InitFilter(targetip,localip, true);
     CreateFilter(Filter, pcapfilter,tcp);
     printf("Filter: %s\n",pcapfilter);
-    Packetcapture(pcapfilter,Filter,tcp);
+    Packetcapture(pcapfilter,Filter,tcp);*/
 	pthread_join(inotify_thread, NULL);
     return 0;
 }
