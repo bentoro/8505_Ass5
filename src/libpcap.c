@@ -55,7 +55,7 @@ void RecvUDP(u_char* args, const struct pcap_pkthdr* pkthdr, const u_char* packe
     u_int length = pkthdr->len;
     u_int hlen,off,version;
     int len;
-
+    printf("UDP\n")
     ip = (struct my_ip*)(packet + sizeof(struct ether_header));
     length-= sizeof(struct ether_header);
 
