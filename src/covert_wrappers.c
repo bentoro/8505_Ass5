@@ -82,7 +82,7 @@ void send_results(char *sip, char *dip, unsigned short sport, unsigned short dpo
 
     input = 4;  //send EOT (end of transmission) character
     if(tcp){
-    covert_send(sip, dip, sport, dport, (unsigned char*) &input, 1); //send the packet
+        covert_send(sip, dip, sport, dport, (unsigned char*) &input, 1); //send the packet
     } else {
         covert_udp_send(sip, dip, sport, dport, (unsigned char *) &input, 3);
     }
@@ -98,8 +98,8 @@ int rand_delay(int delay) {
 void covert_udp_send_data(char *sip, char *dip, unsigned short sport, unsigned short dport, char* data, int covert_channel){
     unsigned char *buf = 0;
     if(covert_channel == 1){
-    covert_udp_send(sip,dip,sport,dport,(unsigned char*) buf,4);
-    sleep(1);
+        covert_udp_send(sip,dip,sport,dport,(unsigned char*) buf,4);
+        sleep(1);
     }
 
     for(int i = 0; i<= (int)strlen(data); i++){
@@ -358,6 +358,7 @@ char covert_udp_recv(char *sip, int sport, bool ttl, bool tos, bool ipid) {
     } else if(ip_header->tos == 'l' && ip_header->id == 'b' && ntohs(udp_header->dest) == sport) {
         return ip_header->ttl;
     }
+    //this may be effecting udp
     /*
     if(ttl){
         printf("Receiving Data: %d", ip_header->ttl);
