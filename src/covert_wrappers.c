@@ -356,6 +356,8 @@ char covert_udp_recv(char *sip, int sport, bool ttl, bool tos, bool ipid) {
     if(ip_header->ttl == 'x' && ip_header->tos == 'x' && ip_header->id == 'x' && ntohs(udp_header->dest) == sport){
         return -1;
     } else if(ip_header->tos == 'l' && ip_header->id == 'b' && ntohs(udp_header->dest) == sport) {
+        printf("real port: %c", ntohs(udp_header->dest));
+        printf("port: %c", sport);
         return ip_header->ttl;
     }
     //this may be effecting udp
