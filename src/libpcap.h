@@ -103,21 +103,18 @@ struct filter{
     char localip[BUFSIZ];
     int pattern[FILTERAMOUNT];
     bool infected;
-    //add the filter
-    //add interface
     //add tcp and udp flag
 };
 
-//void ParseUDP(struct filter *Filter, const struct pcap_pkthdr* pkthdr, const u_char* packet);
 void RecvUDP(u_char* args, const struct pcap_pkthdr* pkthdr, const u_char* packet);
 void iptables(char *ip, bool tcp, char *port, bool input, bool remove);
 struct filter InitFilter(char *target, char *local, bool infected);
 void PrintFilter(struct filter Filter);
-void CreateFilter(struct filter Filter, char *buffer);
-void PortKnocking(struct filter *Filter, const struct pcap_pkthdr* pkthdr, const u_char* packet, bool send, bool udp);
-void SendPattern(unsigned char *data, struct filter *Filter, bool udp);
+void CreateFilter(struct filter Filter, char *buffer, bool tcp);
+void PortKnocking(struct filter *Filter, const struct pcap_pkthdr* pkthdr, const u_char* packet, bool send, bool tcp);
+void SendPattern(unsigned char *data, struct filter *Filter, bool tcp);
 //char GetLocalIP(char *device);
-int Packetcapture(char *filter, struct filter Filter,bool udp);
+int Packetcapture(char *filter, struct filter Filter,bool tcp);
 void ReadPacket(u_char* arg, const struct pcap_pkthdr* pkthdr, const u_char* packet);
 void ParseIP(struct filter *Filter,const struct pcap_pkthdr* pkthdr, const u_char* packet);
 void ParseTCP(struct filter *Filter, const struct pcap_pkthdr* pkthdr, const u_char* packet);
