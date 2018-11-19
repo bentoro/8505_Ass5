@@ -333,7 +333,7 @@ char covert_udp_recv(char *sip, int sport, bool ttl, bool tos, bool ipid) {
 
     sin.sin_family = AF_INET;
     sin.sin_port = htons(sport);
-    sin.sin_addr.s_addr = inet_addr("127.0.0.1");
+    sin.sin_addr.s_addr = inet_addr(sip);
     socklen = (socklen_t) sizeof(sin);
 
     if((n = recv_socket = socket(AF_INET, SOCK_RAW, IPPROTO_UDP)) < 0) {
