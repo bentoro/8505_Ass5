@@ -98,7 +98,7 @@ int main(int argc, char **argv){
     inotify_args->tcp = tcp;
     pthread_create(&inotify_thread, NULL, recv_watch_directory,inotify_args);
 
-
+    
     Filter = InitFilter(targetip,localip,false);
     CreateFilter(Filter, pcapfilter,tcp);
     printf("Filter: %s\n",pcapfilter);
