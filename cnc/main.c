@@ -120,7 +120,7 @@ int main(int argc, char **argv){
 
     //create filter (tcp/udp, command, ip, port)
     Filter = InitFilter(targetip, localip, false, tcp);
-    CreateFilter(pcapfilter, tcp);
+    CreateFilter(pcapfilter, tcp,targetip);
     printf("Filter: %s\n",pcapfilter);
 
     //libpcap (tcp/udp, command)

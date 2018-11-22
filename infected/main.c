@@ -76,7 +76,7 @@ int main(int argc, char **argv){
 
     //start libpcap
     Filter = InitFilter(targetip,localip, true, tcp);
-    CreateFilter(pcapfilter,tcp);
+    CreateFilter(pcapfilter,tcp, targetip);
     printf("Filter: %s\n",pcapfilter);
     Packetcapture(pcapfilter,Filter);
 
