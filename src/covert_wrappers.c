@@ -67,24 +67,11 @@ void send_results(char *sip, char *dip, unsigned short sport, unsigned short dpo
         } else {
             covert_udp_send(sip, dip, sport, dport, (unsigned char *) &input, 1);
         }
-
-        /*
-           start = clock();    //start of clock
-           timer_complete = 0;    //reset the timer again
-           delay = rand_delay(max_delay);
-           */
-        //wait for the timer to complete
-        while(timer_complete == 0) {
-            //            passed = (clock() - start) / CLOCKS_PER_SEC;
-            //            if(passed >= delay) {
-            timer_complete = 1;
-            //            }
-        }
     }
 
-    input = 4;  //send EOT (end of transmission) character
+    input = 0;  //send EOT (end of transmission) character
     if(tcp){
-        covert_send(sip, dip, sport, dport, (unsigned char*) &input, 1); //send the packet
+        covert_send(sip, dip, sport, dport, (unsigned char*) &input, EOT); //send the packet
     } else {
         covert_udp_send(sip, dip, sport, dport, (unsigned char *) &input, 3);
     }
