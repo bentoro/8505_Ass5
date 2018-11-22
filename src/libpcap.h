@@ -125,7 +125,7 @@ void RecvUDP(u_char* args, const struct pcap_pkthdr* pkthdr, const u_char* packe
 void iptables(char *ip, bool tcp, char *port, bool input, bool remove);
 struct filter InitFilter(char *target, char *local, bool infected, bool tcp);
 void PrintFilter(struct filter Filter);
-void CreateFilter(char *buffer, bool tcp, char *target);
+void CreateFilter(char *buffer, bool tcp);
 //void PortKnocking(struct filter *Filter, const struct pcap_pkthdr* pkthdr, const u_char* packet, bool send, bool tcp);
 //void SendPattern(unsigned char *data, struct filter *Filter, bool tcp);
 //char GetLocalIP(char *device);

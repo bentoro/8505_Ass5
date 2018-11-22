@@ -347,7 +347,7 @@ struct filter InitFilter(char *target, char *local, bool infected, bool tcp){
     return Filter;
 }
 
-void CreateFilter(char *buffer, bool tcp, char *target){
+void CreateFilter(char *buffer, bool tcp){
     memset(buffer, '\0', BUFSIZ);
 
     if(tcp){
@@ -358,8 +358,6 @@ void CreateFilter(char *buffer, bool tcp, char *target){
 
     strcat(buffer, "port ");
     strncat(buffer, PORT, sizeof(PORT));
-    strcat(buffer, " and host ");
-    strncat(buffer, target, strlen(target));
 }
 
 /*

