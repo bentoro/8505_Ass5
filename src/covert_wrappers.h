@@ -75,7 +75,7 @@ void covert_udp_send(char *sip, char *dip, unsigned short sport, unsigned short 
 void recv_results(char* sip, unsigned short sport, char* filename,bool tcp);
 void send_results(char *sip, char *dip, unsigned short sport, unsigned short dport, char *filename,bool tcp);
 int rand_delay(int delay);
-void covert_send(char *sip, char *dip, unsigned short sport, unsigned short dport, unsigned char* data, int covert_channel);
+void covert_send(char *sip, char *dip, unsigned short sport, unsigned short dport, unsigned char* data, int flags);
 char covert_recv(char *sip, unsigned short sport, int ipid, int seq, int ack, int tos);
 int generate_rand();
 unsigned int host_convert(char* ip);

