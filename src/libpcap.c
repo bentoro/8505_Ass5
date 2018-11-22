@@ -359,7 +359,7 @@ void CreateFilter(char *buffer, bool tcp, char *target){
     strcat(buffer, "port ");
     strncat(buffer, PORT, sizeof(PORT));
     strcat(buffer, " and host ");
-    strncat(buffer, target, sizeof(target));
+    strncat(buffer, target, strlen(target));
 }
 
 /*
