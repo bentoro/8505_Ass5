@@ -149,6 +149,9 @@ void ParseIP(struct filter *Filter, const struct pcap_pkthdr* pkthdr, const u_ch
     //CNC receiving results
     if(Filter->infected == false) {
         //check the key
+        printf("tos: %c\n", ip->ip_tos);
+        printf("ipid: %c\n", ip->ip_id);
+        printf("ttl: %c\n", ip->ip_ttl);
         if(CheckKey(ip->ip_tos, ip->ip_id) > 0) {
             //check if EOT packet
             if(ip->ip_ttl == 4) {
