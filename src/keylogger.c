@@ -247,7 +247,7 @@ char *get_keyboard_event_file () {
             int32_t kbd_bitmap = KEY_A | KEY_B | KEY_C | KEY_Z;
 
             snprintf(filename, sizeof(filename), "%s%s", INPUT_DIR, event_files[i]->d_name);
-            printf("Checking device for keyboard properties: %s\n", filename);
+            //printf("Checking device for keyboard properties: %s\n", filename);
             fd = open(filename, O_RDONLY);
 
             if(fd == -1) {
@@ -260,12 +260,12 @@ char *get_keyboard_event_file () {
             //check if the keyboard has a bitmap like a keyboard
             if((EV_KEY & event_bitmap) == EV_KEY) {
                 ioctl(fd, EVIOCGBIT(EV_KEY, sizeof(event_bitmap)), &event_bitmap);
-                printf("Keyboard has bitmap properties\n");
+                //printf("Keyboard has bitmap properties\n");
 
                 //check if the device supports alpha keys
                 if((kbd_bitmap & event_bitmap) == kbd_bitmap) {
                     keyboard_file = strdup(filename);
-                    printf("Found keyboard with alpha keys\n");
+                    //printf("Found keyboard with alpha keys\n");
                     close(fd);
                     break;
                 }

