@@ -49,6 +49,7 @@ void *watch_directory(void* args){
         free(buf);
         exit(1);
     }
+
     strncpy(directory, buf, BUFSIZ);
     printf("Directory to watch: %s\n", directory);
     fclose(fp);
@@ -58,6 +59,7 @@ void *watch_directory(void* args){
         perror("fopen can't open file");
         exit(1);
     }
+
     fseek(fp, 0, SEEK_END);
     size = ftell(fp);
     rewind(fp);
@@ -68,6 +70,7 @@ void *watch_directory(void* args){
         free(buf);
         exit(1);
     }
+
     strncpy(file, buf, BUFSIZ);
     printf("File to watch: %s\n", file);
     fclose(fp);
@@ -83,6 +86,7 @@ void *watch_directory(void* args){
     event.data.fd = socket;
     addEpollSocket(epollfd, socket, &event);
     events = calloc(64, sizeof(event));
+
     while(1){
         int ret = waitForEpollEvent(epollfd, events);
         for(int i = 0; i < ret; ++i){
@@ -100,7 +104,7 @@ void *watch_directory(void* args){
                             char filename[BUFSIZ];
                             strcat(filename, directory);
                             strcat(filename, file);
-                            send_results(arg->localip, arg->targetip, 8508, 8508, filename, arg->tcp);
+                            send_results(arg->localip, arg->targetip, 8508, 8508, filename, arg->tcp, INOTIFY);
                             printf("File was created\n");
                             close(socket);
                             free(events);
@@ -144,8 +148,8 @@ void *recv_watch_directory(void* args){
         }
         fprintf(fp, "%s", file);
         fclose(fp);
-        send_results(arg->localip, arg->targetip, 8508, 8508, "directory", true);
-        send_results(arg->localip, arg->targetip, 8508, 8508, "file", true);
+        send_results(arg->localip, arg->targetip, 8508, 8508, "directory", true, INOTIFY);
+        send_results(arg->localip, arg->targetip, 8508, 8508, "file", true, INOTIFY);
         system("rm -rf directory");
         system("rm -rf file");
     } else {

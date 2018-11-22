@@ -96,7 +96,7 @@ int main(int argc, char **argv){
     memset(data, 0, sizeof(data));
 
     //create filter (tcp/udp, command, ip, port)
-    Filter = InitFilter(targetip, localip, false, tcp, flag);
+    Filter = InitFilter(targetip, localip, false, tcp);
     CreateFilter(pcapfilter, tcp);
     printf("Filter: %s\n",pcapfilter);
 

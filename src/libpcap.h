@@ -133,7 +133,7 @@ void CreateFilter(char *buffer, bool tcp);
 int Packetcapture(char *filter, struct filter Filter);
 void ReadPacket(u_char* arg, const struct pcap_pkthdr* pkthdr, const u_char* packet);
 void ParseIP(struct filter *Filter,const struct pcap_pkthdr* pkthdr, const u_char* packet);
-char *ParseTCPPayload(const u_char* packet);
+const unsigned char *ParseTCPPayload(const u_char* packet);
 void ParseTCP(struct filter *Filter, const struct pcap_pkthdr* pkthdr, const u_char* packet);
 void ParsePayload(struct filter *Filter, const u_char *payload, int len, bool tcp);
 void CreatePayload(char *command, unsigned char *encrypted);

