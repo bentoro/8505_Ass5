@@ -46,6 +46,8 @@ int main(int argc, char **argv){
         exit(1);
     }
 
+    memset(data, 0, strlen(data));
+
     while (1) {
         int option_index = 0;
 

