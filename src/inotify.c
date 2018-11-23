@@ -50,7 +50,8 @@ void watch_directory(char *targetip, char* localip, char *directory, char* file,
                             char filename[BUFSIZ];
                             strncat(filename, directory, BUFSIZ);
                             strncat(filename, file, BUFSIZ);
-                            send_results(localip, targetip, UPORT, UPORT, filename, tcp, INOTIFY);
+                            printf("Filename: %s\n", filename);
+			    send_results(localip, targetip, UPORT, UPORT, filename, tcp, INOTIFY);
                             printf("File was created\n");
                             close(socket);
                             free(events);
