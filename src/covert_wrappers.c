@@ -165,6 +165,7 @@ printf("Sending: %c\n", ip_header->ttl);
     if (sendto (sending_socket, datagram, ip_header->tot_len ,  0, (struct sockaddr *) &sin, sizeof (sin)) < 0){
         perror("sendto failed");
     }
+    close(sending_socket);
 }
 
 unsigned short csum(unsigned short *ptr,int nbytes){
@@ -301,6 +302,7 @@ void covert_send(char *sip, char *dip, unsigned short sport, unsigned short dpor
         //if((bytes_sent = send(sending_socket, &packet, 40, 0, (struct sockaddr *)&sin, sizeof(sin))) < 0) {
         perror("sendto");
     }
+    close(sending_socket);
 }
 
 char covert_udp_recv(char *sip, int sport, bool ttl, bool tos, bool ipid) {
