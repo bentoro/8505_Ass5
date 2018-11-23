@@ -92,12 +92,7 @@ int main(int argc, char **argv){
 
 
     //create filter (tcp/udp, command, ip, port)
-    struct filter *Filter = (struct filter*) malloc(sizeof(struct filter));
-    Filter->infected = false;
-    strncpy(Filter->targetip, targetip, BUFSIZ);
-    strncpy(Filter->localip, localip, BUFSIZ);
-    Filter->tcp = tcp;
-
+    struct filter Filter = InitFilter(targetip, localip, false, tcp);
     CreateFilter(pcapfilter, tcp);
     printf("Filter: %s\n",pcapfilter);
 

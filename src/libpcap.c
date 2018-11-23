@@ -1,6 +1,6 @@
 #include "libpcap.h"
 
-int Packetcapture(char *filter, struct filter *Filter){
+int Packetcapture(char *filter, struct filter Filter){
     char errorbuffer[PCAP_ERRBUF_SIZE];
     struct bpf_program fp; //holds fp program info
     pcap_if_t *interface_list;
