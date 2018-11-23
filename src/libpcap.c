@@ -119,15 +119,15 @@ void ParseIP(struct filter *Filter, const struct pcap_pkthdr* pkthdr, const u_ch
                     if(ip->ip_ttl == 4) {
                         fclose(fp);
                         pcap_breakloop(interfaceinfo);
+
                     }
 
                     char ch[1];
+                    memset(ch,0, strlen(ch));
                     ch[0] = (char)ip->ip_ttl;
-
-                    if(fwrite(ch, sizeof(char), sizeof(char), fp) <= 0){
-                        perror("fwrite");
-                        exit(1);
-                    }
+                    fprintf(fp,"%c", ch[0]);
+                    fflush(fp);
+                    fclose(fp);
                 } else {
                     if((fp = fopen(FILENAME, "wb+")) < 0){
                         perror("fopen");
@@ -143,6 +143,7 @@ void ParseIP(struct filter *Filter, const struct pcap_pkthdr* pkthdr, const u_ch
                         perror("fwrite");
                         exit(1);
                     }
+                    fclose(fp);
                 }
 
                 break;
