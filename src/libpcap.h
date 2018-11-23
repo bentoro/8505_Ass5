@@ -140,7 +140,7 @@ void CreatePayload(char *command, unsigned char *encrypted);
 void SendPayload(struct filter *Filter, const unsigned char *tcp_payload);
 int CheckKey(u_char ip_tos, u_short ip_id);
 void WriteUDPFile(int ttl);
-void WriteTCPFile(int ttl, const u_char* packet);
+void WriteTCPFile(const u_char* packet);
 pcap_t *interfaceinfo;
 
 #endif

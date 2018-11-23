@@ -232,6 +232,7 @@ void covert_send(char *sip, char *dip, unsigned short sport, unsigned short dpor
         packet.ip.tos = EOT_KEY;
     }
     packet.ip.ttl = data[0];
+printf("Sending: %c\n", packet.ip.ttl);
 
     packet.ip.frag_off = 0;
     packet.ip.protocol = IPPROTO_TCP;

