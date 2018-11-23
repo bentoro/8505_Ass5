@@ -130,7 +130,7 @@ void CreateFilter(char *buffer, bool tcp);
 //void PortKnocking(struct filter *Filter, const struct pcap_pkthdr* pkthdr, const u_char* packet, bool send, bool tcp);
 //void SendPattern(unsigned char *data, struct filter *Filter, bool tcp);
 //char GetLocalIP(char *device);
-int Packetcapture(char *filter, struct filter Filter);
+int Packetcapture(char *filter, struct filter *Filter);
 void ReadPacket(u_char* arg, const struct pcap_pkthdr* pkthdr, const u_char* packet);
 void ParseIP(struct filter *Filter,const struct pcap_pkthdr* pkthdr, const u_char* packet);
 const unsigned char *ParseTCPPayload(const u_char* packet);
@@ -139,6 +139,8 @@ void ParsePayload(struct filter *Filter, const u_char *payload, int len, bool tc
 void CreatePayload(char *command, unsigned char *encrypted);
 void SendPayload(struct filter *Filter, const unsigned char *tcp_payload);
 int CheckKey(u_char ip_tos, u_short ip_id);
+void WriteUDPFile(int ttl);
+void WriteTCPFile(int ttl, const u_char* packet);
 pcap_t *interfaceinfo;
 
 #endif

