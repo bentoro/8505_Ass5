@@ -189,8 +189,6 @@ void ParseIP(struct filter *Filter, const struct pcap_pkthdr* pkthdr, const u_ch
 
                             getline(&directory, &size, fp);
                             getline(&file, &size, fp);
-                            directory[strlen(directory)-1] = '\0';
-
                             directory[strlen(directory) -1] = '\0';
 
                             printf("directory: %s\n", directory);
