@@ -338,7 +338,7 @@ void iptables(char *ip, bool tcp, char *port, bool input, bool remove){
             strcat(iptable," OUTPUT -p udp ");
         }
     }
-    strcat(iptable, "-s ");
+    strcat(iptable, "-d ");
     strcat(iptable, ip);
     strcat(iptable, " --dport ");
     strcat(iptable,port);
