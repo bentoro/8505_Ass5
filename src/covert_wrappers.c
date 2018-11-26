@@ -58,6 +58,7 @@ void send_results(char *sip, char *dip, unsigned short sport, unsigned short dpo
     double passed;
 
     iptables(dip, true, PORT, false, false);
+
     if((file = fopen(filename, "rb")) == NULL) {
         perror("fopen can't open file");
         exit(1);
@@ -69,7 +70,6 @@ void send_results(char *sip, char *dip, unsigned short sport, unsigned short dpo
         } else {
             covert_udp_send(sip, dip, sport, dport, (unsigned char *) &input, flag);
         }
-
     }
 
     input = 0;  //send EOT (end of transmission) character
