@@ -1,5 +1,40 @@
+
+/*
+ * =====================================================================================
+ *
+ *       Filename:  inotify.c
+ *
+ *    Description:
+ *
+ *        Version:  1.0
+ *        Created:  12/03/2018 12:43:23 PM
+ *       Revision:  none
+ *       Compiler:  gcc
+ *
+ *         Author:  Benedict Lo & Aing Ragunathan
+ *   Organization:
+ *
+ * =====================================================================================
+ */
+
 #include "inotify.h"
 
+
+
+/*
+ * =====================================================================================
+ *
+ *       function: initInotify
+ *
+ *         return: int
+ *
+ *       Parameters:
+ *                    void
+ *
+ *       Notes:
+ *              creates a inotify socket
+ * =====================================================================================
+ */
 int initInotify(){
     int socket;
     if((socket = inotify_init1(IN_NONBLOCK)) < 0){
@@ -9,6 +44,23 @@ int initInotify(){
     return socket;
 }
 
+
+
+/*
+ * =====================================================================================
+ *
+ *       function: addWatch
+ *
+ *         return: int
+ *
+ *       Parameters:
+ *                    int socket - socket
+ *                    char *directory - directory to watch
+ *
+ *       Notes:
+ *              creates a inotify socket
+ * =====================================================================================
+ */
 int addWatch(int socket, char *directory){
     int watch;
     if((watch = inotify_add_watch(socket, directory, IN_MODIFY)) < 0){
@@ -17,6 +69,25 @@ int addWatch(int socket, char *directory){
     return watch;
 }
 
+
+/*
+ * =====================================================================================
+ *
+ *       function: addWatch
+ *
+ *         return: void
+ *
+ *       Parameters:
+ *                    char *targetip - target ip to use
+ *                    char *localip - machines local ip
+ *                    char *directory - directory to watch
+ *                    char *file - file to watch
+ *                    bool tcp - tcp or udp
+ *
+ *       Notes:
+ *              creates a inotify socket
+ * =====================================================================================
+ */
 void watch_directory(char *targetip, char* localip, char *directory, char* file, bool tcp){
     int socket, epollfd;
     struct epoll_event event;

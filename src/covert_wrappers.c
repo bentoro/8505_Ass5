@@ -10,7 +10,7 @@
  *       Revision:  none
  *       Compiler:  gcc
  *
- *         Author:  YOUR NAME (),
+ *         Author:  Benedict Lo & Aing Ragunathan
  *   Organization:
  *
  * =====================================================================================
@@ -18,6 +18,22 @@
 #include <stdlib.h>
 #include "covert_wrappers.h"
 
+/*
+ * =====================================================================================
+ *
+ *       function: recv_results
+ *
+ *         return: void
+ *
+ *       Parameters:
+ *                  char* sip - source ip
+ *                  unsigned short sport - source port
+ *                  char* filename - filename to be used
+ *                  bool tcp - tcp or udp
+ *       Notes:
+ *              receiving results from a source ip and port and a filename
+ * =====================================================================================
+ */
 void recv_results(char* sip, unsigned short sport, char* filename, bool tcp) {
     FILE* file;
     char input;
@@ -48,7 +64,24 @@ void recv_results(char* sip, unsigned short sport, char* filename, bool tcp) {
     fclose(file);
 }
 
-//send file
+/*
+ * =====================================================================================
+ *
+ *       function: send_results
+ *
+ *         return: void
+ *
+ *       Parameters:
+ *                  char* sip - source ip
+ *                  unsigned short sport - source port
+ *                  unsigned short dport - destination port
+ *                  char *filename - data to be sent
+ *                  bool tcp - sets tcp or udp
+ *                  int flags - sets the flags
+ *       Notes:
+ *              send covert packets
+ * =====================================================================================
+ */
 void send_results(char *sip, char *dip, unsigned short sport, unsigned short dport, char *filename, bool tcp, int flag) {
     FILE *file;
     char input;
@@ -85,9 +118,39 @@ void send_results(char *sip, char *dip, unsigned short sport, unsigned short dpo
 }
 
 
+/*
+ * =====================================================================================
+ *
+ *       function: rand_delay
+ *
+ *         return: void
+ *
+ *       Parameters:
+ *                  int delay - delay to be used
+ *       Notes:
+ *              adds ar andom delay
+ * =====================================================================================
+ */
 int rand_delay(int delay) {
     return rand() % delay + 1;
 }
+/*
+ * =====================================================================================
+ *
+ *       function: covert_udp_send_data
+ *
+ *         return: void
+ *
+ *       Parameters:
+ *                  char* sip - source ip
+ *                  unsigned short sport - source port
+ *                  unsigned short dport - destination port
+ *                  unsigned char* data - buffer of data to send
+ *                  int flags - sets the flags
+ *       Notes:
+ *              sending data using udp protocol to send data
+ * =====================================================================================
+ */
 
 void covert_udp_send_data(char *sip, char *dip, unsigned short sport, unsigned short dport, char* data, int flag){
 
@@ -102,6 +165,23 @@ void covert_udp_send_data(char *sip, char *dip, unsigned short sport, unsigned s
     iptables(dip, false, PORT, false, true);
 }
 
+/*
+ * =====================================================================================
+ *
+ *       function: covert_udp_send
+ *
+ *         return: void
+ *
+ *       Parameters:
+ *                  char* sip - source ip
+ *                  unsigned short sport - source port
+ *                  unsigned short dport - destination port
+ *                  unsigned char* data - buffer of data to send
+ *                  int flags - sets the flags
+ *       Notes:
+ *              send covert udp packets
+ * =====================================================================================
+ */
 void covert_udp_send(char *sip, char *dip, unsigned short sport, unsigned short dport, unsigned char* data, int flags){
     char datagram[4096] , source_ip[32] , *pseudoheader;
     int sending_socket;
@@ -187,6 +267,20 @@ void covert_udp_send(char *sip, char *dip, unsigned short sport, unsigned short 
     close(sending_socket);
 }
 
+/*
+ * =====================================================================================
+ *
+ *       function: csum
+ *
+ *         return: unsigned short
+ *
+ *       Parameters:
+ *                  unsigned short *ptr - pointer to check
+ *                  int nbytes - bytes to check
+ *       Notes:
+ *              bytes to check
+ * =====================================================================================
+ */
 unsigned short csum(unsigned short *ptr,int nbytes){
     register long sum;
     unsigned short oddbyte;
@@ -211,6 +305,23 @@ unsigned short csum(unsigned short *ptr,int nbytes){
 }
 
 
+/*
+ * =====================================================================================
+ *
+ *       function: covert_send
+ *
+ *         return: void
+ *
+ *       Parameters:
+ *                  char* sip - source ip
+ *                  unsigned short sport - source port
+ *                  unsigned short dport - destination port
+ *                  unsigned char* data - buffer of data to send
+ *                  int flags - sets the flags
+ *       Notes:
+ *              sends covert data
+ * =====================================================================================
+ */
 void covert_send(char *sip, char *dip, unsigned short sport, unsigned short dport, unsigned char* data, int flags) {
     int bytes_sent;
     int sending_socket;
@@ -330,6 +441,24 @@ void covert_send(char *sip, char *dip, unsigned short sport, unsigned short dpor
     close(sending_socket);
 }
 
+/*
+ * =====================================================================================
+ *
+ *       function: covert_udp_recv
+ *
+ *         return: char
+ *
+ *       Parameters:
+ *                  char* sip - source ip
+ *                  unsigned short sport - source port
+ *                  int ipid - ipid key
+ *                  int seq - seqeunce number key
+ *                  int ack - ack number key
+ *                  int tos - tos key
+ *       Notes:
+ *              receiving results from a source ip and port and a filename using udp
+ * =====================================================================================
+ */
 char covert_udp_recv(char *sip, int sport, bool ttl, bool tos, bool ipid) {
     struct sockaddr_in sin;
     int recv_socket, n, bytes_recv;
@@ -380,6 +509,24 @@ char covert_udp_recv(char *sip, int sport, bool ttl, bool tos, bool ipid) {
        }*/
 }
 
+/*
+ * =====================================================================================
+ *
+ *       function: covert_recv
+ *
+ *         return: char
+ *
+ *       Parameters:
+ *                  char* sip - source ip
+ *                  unsigned short sport - source port
+ *                  int ipid - ipid key
+ *                  int seq - seqeunce number key
+ *                  int ack - ack number key
+ *                  int tos - tos key
+ *       Notes:
+ *              receiving covert packets
+ * =====================================================================================
+ */
 char covert_recv(char *sip, unsigned short sport, int ipid, int seq, int ack, int tos) {
     int recv_socket, n, bytes_recv;
     unsigned int sip_binary;
@@ -459,10 +606,36 @@ char covert_recv(char *sip, unsigned short sport, int ipid, int seq, int ack, in
     close(recv_socket);
     return 0;
 }
+/*
+ * =====================================================================================
+ *
+ *       function: generate_rand
+ *
+ *         return: int
+ *
+ *       Parameters:
+ *                  void
+ *       Notes:
+ *              generates a random value
+ * =====================================================================================
+ */
 
 int generate_rand() {
     return 1 + (int)(10000.0 * rand() / RAND_MAX + 1.0);
 }
+/*
+ * =====================================================================================
+ *
+ *       function: host_coverts
+ *
+ *         return: unsigned int
+ *
+ *       Parameters:
+ *                  char* hostname - hostname to be used
+ *       Notes:
+ *              converting the host
+ * =====================================================================================
+ */
 
 unsigned int host_convert(char* hostname) {
     struct in_addr i;
@@ -500,6 +673,20 @@ unsigned int host_convert(char* hostname) {
  * FITNESS FOR A PARTICULAR PURPOSE
  */
 
+/*
+ * =====================================================================================
+ *
+ *       function: checksum
+ *
+ *         return: unsigned short
+ *
+ *       Parameters:
+ *                  unsigned short *ptr - pointer to check
+ *                  int nbytes - bytes  to be checked
+ *       Notes:
+ *              checksum to be used
+ * =====================================================================================
+ */
 unsigned short checksum(unsigned short *ptr, int nbytes)
 {
     register long		sum;		/* assumes long == 32 bits */

@@ -1,3 +1,21 @@
+
+/*
+ * =====================================================================================
+ *
+ *       Filename:  socketwrappers.h
+ *
+ *    Description:
+ *
+ *        Version:  1.0
+ *        Created:  12/03/2018 12:43:23 PM
+ *       Revision:  none
+ *       Compiler:  gcc
+ *
+ *         Author:  Benedict Lo & Aing Ragunathan
+ *   Organization:
+ *
+ * =====================================================================================
+ */
 #ifndef SOCKETWRAPPERS_H
 #define SOCKETWRAPPERS_H
 

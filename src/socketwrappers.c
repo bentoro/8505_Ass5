@@ -1,3 +1,21 @@
+
+/*
+ * =====================================================================================
+ *
+ *       Filename:  socketwrappers.c
+ *
+ *    Description:
+ *
+ *        Version:  1.0
+ *        Created:  12/03/2018 11:59:52 AM
+ *       Revision:  none
+ *       Compiler:  gcc
+ *
+ *         Author:  Benedict Lo & Aing Ragunathan
+ *   Organization:
+ *
+ * =====================================================================================
+ */
 #define _GNU_SOURCE
 
 #include <fcntl.h>
@@ -21,10 +39,38 @@
 
 #define MAXCONNECTION 62
 
+/*
+ * =====================================================================================
+ *
+ *       function: setNonBlocking
+ *
+ *         return: void
+ *
+ *       Parameters:
+ *                    int fd - file descriptor to set 
+ *
+ *       Notes:
+ *              set a file descriptor to nonblocking
+ * =====================================================================================
+ */
 void setNonBlocking(int fd){
     fcntl(fd, F_SETFL, O_NONBLOCK);
 }
 
+/*
+ * =====================================================================================
+ *
+ *       function: sigHandler
+ *
+ *         return: void
+ *
+ *       Parameters:
+ *                    int s - error to watch
+ *
+ *       Notes:
+ *              starts the signal handler
+ * =====================================================================================
+ */
 void sigHandler(int s){
     int saved_errno = errno;
 
@@ -33,6 +79,22 @@ void sigHandler(int s){
     errno = saved_errno;
 }
 
+/*
+ * =====================================================================================
+ *
+ *       function: setHints
+ *
+ *         return: struct addrinfo
+ *
+ *       Parameters:
+ *                    int family - set the family
+ *                    int socktype - set the socktype
+ *                    int flags - set the flags
+ *
+ *       Notes:
+ *              starts the timer
+ * =====================================================================================
+ */
 struct addrinfo setHints(int family, int socktype, int flags){
     struct addrinfo hints;
     memset(&hints, 0, sizeof(hints));

@@ -1,3 +1,22 @@
+/*
+ * =====================================================================================
+ *
+ *       Filename:  main.c
+ *
+ *    Description:
+ *
+ *        Version:  1.0
+ *        Created:  12/03/2018
+ *       Revision:  none
+ *       Compiler:  gcc
+ *
+ *         Author:  Benedict Lo & Aing Ragunathan
+ *   Organization:
+ *
+ * =====================================================================================
+ */
+
+
 #include <getopt.h>
 #include <pthread.h>
 #include "../src/encrypt_utils.h"

